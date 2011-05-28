@@ -1,0 +1,3 @@
+﻿<span class="boolDiv [[+class]]">
+  <input type="[[+type:default=`radio`]]" class="[[+type:default=`radio`]]" value="[[+label]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]][[+label:strip:stripString=` `:stripString=`/`]]" [[!+[[+prefix]][[+name]]:FormitIsChecked=`[[+label]]`]] /> 
+<label for="[[+name]][[+label:strip:stripString=` `:stripString=`/`]]" class="[[+type]]" id="label[[+name]][[+idx]]">[[+message:default=`[[+label]]`]]</label></span>
