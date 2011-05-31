@@ -8,10 +8,8 @@
 <!-- textarea -->
 
 <!-- checkbox -->
-<span class="boolWrap">
 <input name="[[+name]]" type="hidden" value="[[+default]]" />
 [[+options_html]]
-</span>
 <!-- checkbox -->
 
 <!-- radio -->
@@ -40,5 +38,5 @@
 <!-- option --><option value="[[+value]]" [[!+[[+prefix]][[+name]]:FormItIsSelected=`[[+value]]`]]>[[+label]]</option><!-- option -->
 
 <!-- bool --><span class="boolDiv [[+class]]">
-  <input type="[[+type]]" class="[[+type]]" value="[[+value]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]][[+value:md5]]" [[!+[[+prefix]][[+name]]:FormitIsChecked=`[[+value]]`]] /> 
-<label for="[[+name]][[+value:md5]]" class="[[+type]]" id="label[[+name]][[+idx]]">[[+label]]</label></span><!-- bool -->
+  <input type="[[+subtype]]" class="[[+subtype]]" value="[[+label]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]][[+label:strip:stripString=` `:stripString=`/`]]" [[!+[[+prefix]][[+name]]:FormitIsChecked=`[[+label]]`]] /> 
+<label for="[[+name]][[+label:strip:stripString=` `:stripString=`/`]]" class="[[+subtype]]" id="label[[+name]][[+idx]]">[[+message:default=`[[+label]]`]]</label></span><!-- bool -->

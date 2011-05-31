@@ -57,17 +57,17 @@ class FormitFastPack {
         $assetsUrl = $this->modx->getOption('ffp.assets_url',null,$modx->getOption('assets_url').'components/formitfastpack/');
 
         $this->config = array_merge(array(
-            'corePath' => $corePath,
-            'modelPath' => $corePath.'model/',
-            'processorsPath' => $corePath.'processors/',
-            'controllersPath' => $corePath.'controllers/',
-            'chunksPath' => $corePath.'elements/chunks/',
-            'snippetsPath' => $corePath.'elements/snippets/',
+            'core_path' => $corePath,
+            'model_path' => $corePath.'model/',
+            'processors_path' => $corePath.'processors/',
+            'controllers_path' => $corePath.'controllers/',
+            'chunks_path' => $corePath.'elements/chunks/',
+            'snippets_path' => $corePath.'elements/snippets/',
 
-            'baseUrl' => $assetsUrl,
-            'cssUrl' => $assetsUrl.'css/',
-            'jsUrl' => $assetsUrl.'js/',
-            'connectorUrl' => $assetsUrl.'connector.php',
+            'base_url' => $assetsUrl,
+            'css_url' => $assetsUrl.'css/',
+            'js_url' => $assetsUrl.'js/',
+            'connector_url' => $assetsUrl.'connector.php',
 
             'thread' => '',
 
@@ -146,7 +146,7 @@ class FormitFastPack {
     private function _getTplChunk($name,$suffix = '.chunk.tpl') {
         $chunk = $name;
         $suffix = $this->modx->getOption('suffix',$this->config,$suffix);
-        $f = $this->config['chunksPath'].strtolower($name).$suffix;
+        $f = $this->config['chunks_path'].strtolower($name).$suffix;
         if (file_exists($f)) {
             $o = file_get_contents($f);
             $chunk = $this->modx->newObject('modChunk');
