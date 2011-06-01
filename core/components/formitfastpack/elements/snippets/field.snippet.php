@@ -4,7 +4,7 @@
  *
  * Copyright 2010-11 by Oleg Pryadko <oleg@websitezen.com>
  *
- * This file is part of FormitFastPack, a geougmedia integration for MODx Revolution.
+ * This file is part of FormitFastPack, a FormIt helper package for MODx Revolution.
  *
  * FormitFastPack is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
