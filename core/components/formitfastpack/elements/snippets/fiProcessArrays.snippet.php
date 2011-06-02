@@ -5,15 +5,17 @@
  * options: 
  * &fipaFieldSuffix - the suffix to add to the array name - default: "_values" - example resulting placeholder: [[+colors_values]]
  * &fipaValueSeparator - the separator to use between the values - default: ", "
+ * &fipaExcludedFields - a comma-separated list of field names to exclude
  * 
  * Copyright Oleg Pryadko (websitezen.com) 2011
  * License GPL v.3 or later 
 */ 
-$fieldSuffix = $modx->getOption('fipaFieldSuffix',$scriptProperties,'_values');
+$field_suffix = $modx->getOption('fipaFieldSuffix',$scriptProperties,'_values');
 $separator = $modx->getOption('fipaValueSeparator',$scriptProperties,', ');
+$excluded_fields = explode(',',$modx->getOption('fipaExcludedFields',$scriptProperties,''));
 $allFormFields = $hook->getValues();
 foreach ($allFormFields as $fieldName => $fieldValue) {
-  if (is_array($fieldValue)) {
+  if (is_array($fieldValue) && !in_array($fieldName,$excluded_fields)) {
     $imploded = '';
     $count=0;
     foreach ($fieldValue as $value) {
@@ -23,7 +25,7 @@ foreach ($allFormFields as $fieldName => $fieldValue) {
         $count++;
       }
     }
-    $hook->setValue($fieldName.$fieldSuffix,$imploded);
+    $hook->setValue($fieldName.$field_suffix,$imploded);
   }
 }
 return true;

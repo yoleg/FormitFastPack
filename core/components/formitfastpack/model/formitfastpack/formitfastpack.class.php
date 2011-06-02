@@ -62,21 +62,7 @@ class FormitFastPack {
             'processors_path' => $corePath.'processors/',
             'controllers_path' => $corePath.'controllers/',
             'chunks_path' => $corePath.'elements/chunks/',
-            'snippets_path' => $corePath.'elements/snippets/',
-
-            'base_url' => $assetsUrl,
-            'css_url' => $assetsUrl.'css/',
-            'js_url' => $assetsUrl.'js/',
-            'connector_url' => $assetsUrl.'connector.php',
-
-            'thread' => '',
-
-            'tplFormitFastPackAddComment' => '',
-            'tplFormitFastPackComment' => '',
-            'tplFormitFastPackCommentOptions' => '',
-            'tplFormitFastPackComments' => '',
-            'tplFormitFastPackLoginToComment' => '',
-            'tplFormitFastPackReport' => '',
+            'snippets_path' => $corePath.'elements/snippets/'
         ),$config);
 
         /* load debugging settings */
@@ -94,6 +80,43 @@ class FormitFastPack {
                 $this->modx->user = $user;
             }
         }
+    }
+    /**
+     * Adds a marker (such as selected="selected") after a search string such as value="1" if it is found.
+     * 
+     *
+     * @access public
+     * @param string $input_text The text to process. Should have values in the form of value="$current_value".
+     * @param string $current_value The value to add the marker afterwards.
+     * @param string $selected_marker The marker to add after the value attribute.
+     * @return string The processed output.
+     */
+    public function markSelected($input_text,$current_value = '',$selected_marker = 'selected="selected"') {
+        $input_text = $this->_markSearchReplace($input_text, $current_value,$selected_marker);
+        if (strpos($current_value,',') !== false) {
+            $current_value_array = explode(',',$current_value);
+            foreach($current_value_array as $value) {
+                $input_text = $this->_markSearchReplace($input_text,$value,$selected_marker);
+            }
+        }
+        return $input_text;
+    }
+
+    /**
+     * Adds a marker (such as selected="selected") after a search string such as value="1" if it is found
+     *
+     * @access public
+     * @param string $input_text The text to process. Should have values in the form of value="$current_value".
+     * @param string $current_value The value to add the marker afterwards.
+     * @param string $selected_marker The marker to add after the value attribute.
+     * @return string The processed output.
+     */
+    protected function _markSearchReplace($input_text,$current_value = '',$selected_marker = 'selected="selected"') {
+        // Run search and replace to add selected or checked attributes
+        $options_selected_search = 'value="'.$current_value.'"';
+        $options_selected_replace = $options_selected_search .' '.$selected_marker;
+        $output = str_replace($options_selected_search, $options_selected_replace,$input_text);
+        return $output;
     }
 
     /**

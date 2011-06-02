@@ -9,26 +9,21 @@
 
 <!-- checkbox -->
 <span class="boolWrap">
-<input name="[[+name]]" type="hidden" value="[[+default]]" />
+<input name="[[+name]][[+array:notempty=`[]`]]" type="hidden" value="" />
 [[+options_html]]
 </span>
 <!-- checkbox -->
 
 <!-- radio -->
 <span class="boolWrap">
-<input type="hidden" name="[[+name]]" value="[[+default]]" />
+<input type="hidden" name="[[+name]]" value="" />
 [[+options_html]]
 </span>
 <!-- radio -->
 
-<!-- submit -->
-<input id="[[+name]]" class="button" name="[[+name]]" type="[[+type]]" value="[[+message:default=`Submit`]]" />
-<a href="[[~[[*id]]]]" class="button">Cancel</a>
-<!-- submit -->
-
 <!-- select -->
-<select name="[[+name]]" id="[[+name]]" class="[[+class]]"[[+multiple:notempty=` multiple="multiple"`]]>
-  [[+header:notempty=`<option name="[[+name]]" value="[[+default]]">[[+header]]</option>`]]
+<select name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" class="[[+class]]"[[+multiple:notempty=` multiple="multiple"`]][[+title:notempty=` title="[[+title]]"`]]>
+  [[+header:notempty=`<option value="[[+default]]">[[+header]]</option>`]]
   [[+options_html]]
 </select>
 <!-- select -->
@@ -37,8 +32,14 @@
 <span class="static_field">[[!+[[+name]]]]</span>
 <!-- static -->
 
-<!-- option --><option value="[[+value]]" [[!+[[+prefix]][[+name]]:FormItIsSelected=`[[+value]]`]]>[[+label]]</option><!-- option -->
+<!-- submit -->
+<input id="[[+name]]" class="button" name="[[+name]]" type="[[+type]]" value="[[+message:default=`Submit`]]" />
+<input id="[[+name]]-clear" class="button" type="reset" value="[[+clear_message:default=`Clear Form`]]" />
+<!-- submit -->
 
-<!-- bool --><span class="boolDiv [[+class]]">
-  <input type="[[+type]]" class="[[+type]]" value="[[+value]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]][[+value:md5]]" [[!+[[+prefix]][[+name]]:FormitIsChecked=`[[+value]]`]] /> 
-<label for="[[+name]][[+value:md5]]" class="[[+type]]" id="label[[+name]][[+idx]]">[[+label]]</label></span><!-- bool -->
+<!-- option --><option value="[[+value]]">[[+label]]</option><!-- option -->
+
+<!-- bool -->
+<span class="boolDiv [[+class]]">
+<input type="[[+type]]" class="[[+type]]" value="[[+value]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+key]]"  /> 
+<label for="[[+key]]" class="[[+type]]" id="label[[+key]]">[[+label]]</label></span><!-- bool -->
