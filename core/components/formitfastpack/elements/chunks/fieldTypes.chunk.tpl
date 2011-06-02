@@ -1,7 +1,11 @@
 ﻿
 <!-- text -->
-  <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="40">
+  <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="[[+size:default=`40`]]">
 <!-- text -->
+
+<!-- hidden -->
+  <input type="[[+hidden]]" name="[[+name]]" value="[[+current_value]]">
+<!-- hidden -->
 
 <!-- textarea -->
   <textarea id="[[+name]]" class="[[+type]] [[+class]][[+error_class]]" name="[[+name]]">[[+current_value]]</textarea>
