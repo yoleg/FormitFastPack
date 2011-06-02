@@ -22,13 +22,12 @@
 /**
  * @package FormitFastPack
  */
-$name = $modx->getOption('name',$scriptProperties,'');
-if (empty($name)) return '';
 $debug = $modx->getOption('debug',$scriptProperties,false);
 $ffp = $modx->getService('formitfastpack','FormitFastPack',$modx->getOption('ffp.core_path',null,$modx->getOption('core_path').'components/formitfastpack/').'model/formitfastpack/',$scriptProperties);
 if (!($ffp instanceof FormitFastPack)) return 'Package not found.';
 
-// Required properties
+// Important properties
+$name = $modx->getOption('name',$scriptProperties,'');
 $type = $modx->getOption('type',$scriptProperties,'text');
 $prefix = $modx->getOption('prefix',$scriptProperties,'fi.');
 $key_prefix = $modx->getOption('key_prefix',$scriptProperties,'');
