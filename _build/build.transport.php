@@ -425,12 +425,6 @@ if ($hasSetupOptions) {
     ));
 }
 
-
-/* create a vehicle for the category and all the things
- * we've added to it.
- */
-$vehicle = $builder->createVehicle($category,$attr);
-
 if ($hasValidator) {
     $modx->log(modX::LOG_LEVEL_INFO,'Adding in Script Validator.');
     $vehicle->validate('php',array(

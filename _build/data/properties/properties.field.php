@@ -19,7 +19,7 @@ $properties = array(
         'desc' => 'ffp_field_debug_desc',
         'type' => 'combo-boolean',
         'options' => '',
-        'value' => '1',
+        'value' => false,
         'lexicon' => 'formitfastpack:properties',
     ),
     array(
@@ -59,7 +59,7 @@ $properties = array(
         'desc' => 'ffp_field_outer_tpl_desc',
         'type' => 'textfield',
         'options' => '',
-        'value' => 'field',
+        'value' => 'fieldWrapTpl',
         'lexicon' => 'formitfastpack:properties',
     ),
     array(
@@ -67,7 +67,7 @@ $properties = array(
         'desc' => 'ffp_field_tpl_desc',
         'type' => 'textfield',
         'options' => '',
-        'value' => 'fieldTypes',
+        'value' => 'fieldTypesTpl',
         'lexicon' => 'formitfastpack:properties',
     ),
     array(
@@ -97,9 +97,9 @@ $properties = array(
     array(
         'name' => 'to_placeholders',
         'desc' => 'ffp_field_to_placeholders_desc',
-        'type' => 'textfield',
+        'type' => 'combo-boolean',
         'options' => '',
-        'value' => 'false',
+        'value' => false,
         'lexicon' => 'formitfastpack:properties',
     ),
     array(
@@ -129,9 +129,9 @@ $properties = array(
     array(
         'name' => 'mark_selected',
         'desc' => 'ffp_field_mark_selected_desc',
-        'type' => 'textfield',
+        'type' => 'combo-boolean',
         'options' => '',
-        'value' => 'true',
+        'value' => true,
         'lexicon' => 'formitfastpack:properties',
     ),
     array(

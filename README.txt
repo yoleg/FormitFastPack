@@ -8,8 +8,8 @@ Snippets:
 Chunks:
 * exampleFormItForm.chunk.tpl - an example FormIt form to get you started. Some of these fields are not yet templated!
 * exampleFormItEmailReport.chunk.tpl - An example FormIt email report template. You can use a single email report template for every single form on your site.
-* fieldTypes.chunk.tpl - the default &tpl chunk. Copy and paste its contents into a chunk called "fieldTypes" and edit to suit your needs.
-* field.chunk.tpl - the default &outer_tpl chunk. Copy and paste its contents into a chunk called "field" and edit to suit your needs.
+* fieldTypesTpl.chunk.tpl - the default &tpl chunk. Copy and paste its contents into a chunk called "fieldTypesTpl" and edit to suit your needs.
+* fieldWrapTpl.chunk.tpl - the default &outer_tpl chunk. Copy and paste its contents into a chunk called "fieldWrapTpl" and edit to suit your needs.
 * formReportRow.chunk.tpl - the default fiGenerateReport row template. Note how output filters are used in combination with a naming convention to generate proper labels from field names.
 
 Notes:

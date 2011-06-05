@@ -29,8 +29,8 @@
  * type - the field type. Used to decide which subset of the tpl chunk to use. (default: 'text')
  * prefix - the prefix used by the FormIt call this field is for - may also work with EditProfile, Register, etc... snippet calls. (default: 'fi.')
  * key_prefix - To use the same field names for different forms on the same page, specify a key prefix. (default: '')
- * outer_tpl - The outer template chunk, which can be used for any HTML that stays consistent between fields. This is a good place to put your <label> tags and any wrapping <li> or <div> elements that wrap each field in your form. (default: 'field')
- * tpl - The template chunk to use for templating all of the various fields. Each field is separated from the others by wrapping it - both above and below - with the following HTML comment: <!-- fieldtype -->, where fieldtype is the field type. For example, for a text field: <!-- text --> <input type="[[+type]]" name="[[+name]]" value="[[+current_value]]" /> <!-- text --> Use the fieldTypes.chunk.tpl in the chunks directory as the starting point. (default: 'fieldTypes')
+ * outer_tpl - The outer template chunk, which can be used for any HTML that stays consistent between fields. This is a good place to put your <label> tags and any wrapping <li> or <div> elements that wrap each field in your form. (default: 'fieldWrapTpl')
+ * tpl - The template chunk to use for templating all of the various fields. Each field is separated from the others by wrapping it - both above and below - with the following HTML comment: <!-- fieldtype -->, where fieldtype is the field type. For example, for a text field: <!-- text --> <input type="[[+type]]" name="[[+name]]" value="[[+current_value]]" /> <!-- text --> Use the fieldTypesTpl.chunk.tpl in the chunks directory as the starting point. (default: 'fieldTypesTpl')
  * inner_override - Specify your own HTML instead of using the field template. Useful if you want to use the outer_tpl and smart caching but specify your own HTML for the field. (default: '')
  * inner_chunk - Similar to inner_override, but accepts the name of a chunk. All of the placeholders and parameters are passed to the chunk. (default: '')
  * error_class - The name of the class to use for the [[+error_class]] placeholder. This placeholder is generated along with [[+error]] if a FormIt error is found for this field. (default: 'error')
@@ -84,9 +84,9 @@ $key_prefix = $modx->getOption('key_prefix',$scriptProperties,'');
 // example: <!-- textarea --> <input type="textarea" name="[[+name]]">[[+current_value]]</input> <!-- textarea -->
 $delimiter = '<!-- '.$type.' -->';
 // The outer template 
-$outer_tpl = $modx->getOption('outer_tpl',$scriptProperties,'field');
+$outer_tpl = $modx->getOption('outer_tpl',$scriptProperties,'fieldWrapTpl');
 // The main template (contains all field types separated by the delimiter)
-$tpl = $modx->getOption('tpl',$scriptProperties,'fieldTypes');
+$tpl = $modx->getOption('tpl',$scriptProperties,'fieldTypesTpl');
 
 // For checkboxes, radios, selects, etc... that require inner fields, parse options
 $options = $modx->getOption('options',$scriptProperties,'');
