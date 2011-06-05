@@ -1,5 +1,4 @@
-﻿<?php
-/**
+﻿<?php/**
  * FormitFastPack
  *
  * Copyright 2010-11 by Oleg Pryadko <oleg@websitezen.com>
@@ -22,6 +21,55 @@
 /**
  * @package FormitFastPack
  */
+/*
+ * General Parameters:
+ *
+ * debug - turn on debugging (default: false)
+ * name - the name of the field (default: '')
+ * type - the field type. Used to decide which subset of the tpl chunk to use. (default: 'text')
+ * prefix - the prefix used by the FormIt call this field is for - may also work with EditProfile, Register, etc... snippet calls. (default: 'fi.')
+ * key_prefix - To use the same field names for different forms on the same page, specify a key prefix. (default: '')
+ * outer_tpl - The outer template chunk, which can be used for any HTML that stays consistent between fields. This is a good place to put your <label> tags and any wrapping <li> or <div> elements that wrap each field in your form. (default: 'field')
+ * tpl - The template chunk to use for templating all of the various fields. Each field is separated from the others by wrapping it - both above and below - with the following HTML comment: <!-- fieldtype -->, where fieldtype is the field type. For example, for a text field: <!-- text --> <input type="[[+type]]" name="[[+name]]" value="[[+current_value]]" /> <!-- text --> Use the fieldTypes.chunk.tpl in the chunks directory as the starting point. (default: 'fieldTypes')
+ * inner_override - Specify your own HTML instead of using the field template. Useful if you want to use the outer_tpl and smart caching but specify your own HTML for the field. (default: '')
+ * inner_chunk - Similar to inner_override, but accepts the name of a chunk. All of the placeholders and parameters are passed to the chunk. (default: '')
+ * error_class - The name of the class to use for the [[+error_class]] placeholder. This placeholder is generated along with [[+error]] if a FormIt error is found for this field. (default: 'error')
+ * to_placeholders - If set, will set all of the placeholders as global MODx placeholders as well. (default: false)
+ * cache - Whether to enable smart caching for the field, which tries to cache as much as possible without caching the current_value, error, error_class, or selected/ checked status. (default: if the system setting 'ffp.field_default_cache' is found, uses that. Otherwise defaults to true if the field uses options or overrides and false if it doesn't.)
+ *
+ * Nested or Boolean Fields Parameters
+ *
+ * options - If your field is a nested or group type, such as checkbox, radio, or select, specify the options in tv-style format like so: Label One==value1||Label Two==value2||Label Three==value3 or Value1||Value2||Value3. The field snippet uses a sub-type (specified by option_type) to template the options. Setting this parameter causes smart caching to be enabled by default and "selected" or "checked" to be added to the currently selected option, as appropriate. See "mark_slected" and "cache" parameters. (default: '')
+ * option_type - Specify the field type used for each option. If left blank, defaults to "bool" if &type is checkbox or radio and "option" if &type is select). (default: '')
+ * options_override - you can specify your own HTML instead of using the &options parameter to generate options. For example, you might decide to pass in <option value="something" data="something">hello</option> if the type is set to "select". It otherwise acts exactly as if you had specified the options parameter for marking and caching purposes. (default: '')
+ * options_chunk - Similar to options_override, but accepts the name of a chunk. All of the placeholders and parameters are passed to the chunk. (default: '')
+ * mark_selected - If left blank or set to zero, disables option marking. By default if "options" or an options override is specified, the field snippet will add a marker such as ' checked="checked"' or (if the field type is "select") ' selected="selected"' in the right place, assuming you are using HTML syntax for value (value="X"). This is a lot faster than using FormItIsSelected or FormItIsChecked.   (default: true)
+ * selected_text - The text to mark selected options with (such as checked="checked" or selected="selected"). If left blank or set to false, defaults to checked="checked" unless the field type is "select", in which case it uses selected="selected". (default: '')
+ *
+ * Custom Parameters
+ *
+ * You can add an infinite number of custom parameters, all of which will be set as placeholders in the template chunks.
+ * Example parameters: class, req (required), note, help
+ * Example parameter usage: 
+ *  - class="[[+type]] [[+class]][[+error_class]][[+req:notempty=` required`]]"
+ *  - label="[[+label:default=`[[+name:replace=`_== `:ucwords]]`]][[+req:notempty=` *`]]"
+ *  - [[+note:notempty=`<span class="notice">[[+note]]</span>`]]
+ * 
+ * Placeholders:
+ * 
+ * The values of all the parameters listed above and any other parameters you pass to the snippet are automatically set as placeholders. 
+ * This allows you to add custom placeholders such as "required", "class", etc.... (see custom parameters above)
+ * In addition, the following special placeholders are generated:
+ *
+ * inner_html - Used in the outer_tpl to position the generated content, which will vary by field type. Simple example: <li>[[+inner_html]]</li>
+ * options_html - Used in the tpl to position the options html (only when using &options or an options override). Example: <select name="[[+name]]">[[+options_html]]</select>
+ * current_value - The value of the FormIt value for the field name. Exactly the same as writing [[!fi.fieldname]] for each fieldname (if the prefix is fi.). Never gets cached.
+ * error - The value of the FormIt error message for the field name, if one is found. Exactly the same as writing [[!fi.error.fieldname]] for each fieldname (if the prefix is fi.). Never gets cached.
+ * error_class - set to the value of the error_class parameter (default is " error") ONLY if a FormIt error for the field name is found. Exactly the same as using [[+error:notempty=` error`]].
+ * key - A unique but human-friendly identifier for each field or sub-field (useful for HTML id attributes). Generated from the key_prefix, prefix, field name, and (only if using an option field) value.
+ *
+ */
+ 
 $debug = $modx->getOption('debug',$scriptProperties,false);
 $ffp = $modx->getService('formitfastpack','FormitFastPack',$modx->getOption('ffp.core_path',null,$modx->getOption('core_path').'components/formitfastpack/').'model/formitfastpack/',$scriptProperties);
 if (!($ffp instanceof FormitFastPack)) return 'Package not found.';
@@ -59,8 +107,10 @@ $default_option_tpl = isset($inner_static[$type]['option_tpl']) ? $inner_static[
 $default_selected_text = isset($inner_static[$type]['selected_text']) ? $inner_static[$type]['selected_text'] : $inner_static['default']['selected_text'];
 
 // Allow overriding the default settings for types from the script properties
-$option_tpl = $modx->getOption('option_type',$scriptProperties, $default_option_tpl);
-$selected_text = $modx->getOption('selected_text',$scriptProperties, $default_selected_text);
+$option_tpl = $modx->getOption('option_type',$scriptProperties, '');
+$option_tpl = $option_tpl ? $option_tpl : $default_option_tpl;
+$selected_text = $modx->getOption('selected_text',$scriptProperties, '');
+$selected_text = $selected_text ? $selected_text : $default_selected_text;
 
 /*      CACHING         */
 // See if caching is set system-wide or in the scriptProperties
@@ -92,11 +142,8 @@ if ($cache) {
 if (!$cache || !$already_cached) {
     // Set placeholders
     $placeholders = $scriptProperties;
-    $placeholders['type'] = $type;
-    $placeholders['prefix'] = $prefix;
-    $placeholders['name'] = $name;
-    $placeholders['remote_prefix'] = $modx->getOption('type',$scriptProperties,'profile.remote.');
-    $placeholders['class'] = $modx->getOption('class',$scriptProperties,'');
+    // ToDo: Move custom placeholders like this into a setFieldDefaults snippet
+    $placeholders['remote_prefix'] = $modx->getOption('remote_prefix',$scriptProperties,'profile.remote.');
     $placeholders['key'] = preg_replace("/[^a-zA-Z0-9\s]/", "", $key_prefix.$name);
 
     // Set overrides for options and inner_html
@@ -133,9 +180,9 @@ $cached = array('options_html' => $options_html,'inner_html' => $inner_html,'pla
 $error = $modx->getPlaceholder($prefix.'error.'.$name);
 $current_value = $modx->getPlaceholder($prefix.$name);
 
-// Set varying placeholders and properties that cannot be cached
+// Set the error and current value placeholders.
 $placeholders['error'] = $error;
-$placeholders['current_value'] = $current_value; // ToDo: add caching and take this out to a str_replace function.
+$placeholders['current_value'] = $current_value; // ToDo: add better caching and take this out to a str_replace function.
 $placeholders['error_class'] = $error ? ' '.$modx->getOption('error_class',$scriptProperties,'error') : '';
 
 // Add selected markers to options - much faster than FormItIsSelected and FormItIsChecked for large forms

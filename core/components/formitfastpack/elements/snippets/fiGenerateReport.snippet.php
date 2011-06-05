@@ -1,5 +1,4 @@
-﻿<?php
-/* 
+﻿<?php/* 
  * fiGenerateReport formit hook. Creates a single placeholder with a complete email report for all non-array fields that have not otherwise been excluded. 
  * 
  * IMPORTANT: if you use array values, call the fiProcessArrays hook BEFORE the fiGenerateReport hook OR use another method to process the arrays
@@ -7,9 +6,9 @@
  * Please see forum post: http://modxcms.com/forums/index.php?topic=64656.0
  * 
  * Parameter
- * &figrTpl	- the row template	- default: formReportRow
- * &figrAllValuesLabel	- the name of the placeholder generated for the complete report	- default: figr_values
- * &figrExcludedFields	- a list of all fields to be excluded from the report
+ * &figrTpl    - the row template    - default: formReportRow
+ * &figrAllValuesLabel    - the name of the placeholder generated for the complete report    - default: figr_values
+ * &figrExcludedFields    - a list of all fields to be excluded from the report
  * &figrDefaultExcludedFields - also override the default excluded fields. Unless this option is set, the following additional fields are always excluded: nospam,blank,recaptcha_challenge_field,recaptcha_response_field.
  * 
  * Copyright 2011 Oleg Pryadko (websitezen.com)

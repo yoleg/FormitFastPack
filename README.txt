@@ -1,4 +1,4 @@
-License: GPL v.2 or later
+﻿License: GPL v.2 or later
 Contact: Oleg Pryadko <oleg@websitezen.com>
 
 Snippets:

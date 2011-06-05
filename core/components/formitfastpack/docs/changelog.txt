@@ -1,0 +1,6 @@
+﻿Changelog for FormitFastPack.
+
+
+FormitFastPack 0.1.0 beta
+======================================
+- starting version
