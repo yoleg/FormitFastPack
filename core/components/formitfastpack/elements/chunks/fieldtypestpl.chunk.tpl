@@ -4,7 +4,7 @@
 <!-- text -->
 
 <!-- file -->
-  <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="[[+size:default=`40`]]">
+  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="[[+size:default=`40`]]">
 <!-- file -->
 
 <!-- hidden -->

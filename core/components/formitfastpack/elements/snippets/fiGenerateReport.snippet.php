@@ -1,4 +1,4 @@
-﻿<?php/* 
+﻿<?php /* 
  * fiGenerateReport formit hook. Creates a single placeholder with a complete email report for all non-array fields that have not otherwise been excluded. 
  * 
  * IMPORTANT: if you use array values, call the fiProcessArrays hook BEFORE the fiGenerateReport hook OR use another method to process the arrays
