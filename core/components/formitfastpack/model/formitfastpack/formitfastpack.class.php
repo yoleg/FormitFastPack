@@ -35,9 +35,15 @@ class FormitFastPack {
     public $modx = null;
     /**
      * @access public
-     * @var array A collection of properties to adjust FormitFastPack behaviour.
+     * @var array FormitFastPack config array
      */
     public $config = array();
+
+    /**
+     * @access public
+     * @var array A collection of properties to adjust FormitFastPack behaviour.
+     */
+    public $defaults = array();
 
     /**
      * The FormitFastPack Constructor.
@@ -90,8 +96,8 @@ class FormitFastPack {
      * @param array $config The configuration array.
      * @return bool Success.
      */
-    public function setConfig(array $config = array()) {
-        $this->config = array_merge($this->config,$config);
+    public function setConfig(array $defaults = array()) {
+        $this->defaults = array_merge($this->defaults,$defaults);
         return true;
     }
     
@@ -103,7 +109,7 @@ class FormitFastPack {
      * @return array The configuration array.
      */
     public function getConfig() {
-        return $this->config;
+        return $this->defaults;
     }
 
     /**

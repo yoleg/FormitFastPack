@@ -36,8 +36,37 @@ $snippets[$idx]->fromArray(array(
     'description' => 'A form-field generator compatible with FormIt.',
     'snippet' => getSnippetContent($sources['source_core'].'/elements/snippets/'.$name_lower.'.snippet.php'),
 ));
-$properties = include $sources['data'].'properties/properties.'.$name_lower.'.php';
-$snippets[$idx]->setProperties($properties);
+// Property sets don't work well with fieldSetDefaults snippet 
+// Use the fieldPropSetExample snippet to create your own or uncomment these lines and rebuild package
+// $properties = include $sources['data'].'properties/properties.'.$name_lower.'.php';
+// $snippets[$idx]->setProperties($properties);
+
+$idx++;
+$name_lower = 'fieldsetdefaults';
+$snippets[$idx]= $modx->newObject('modSnippet');
+$snippets[$idx]->fromArray(array(
+    'id' => $idx,
+    'name' => 'fieldSetDefaults',
+    'description' => 'Sets default options for any field snippets called after.',
+    'snippet' => getSnippetContent($sources['source_core'].'/elements/snippets/'.$name_lower.'.snippet.php'),
+));
+// Property sets don't work well with fieldSetDefaults snippet 
+// Use the fieldPropSetExample snippet to create your own or uncomment these lines and rebuild package
+// $properties = include $sources['data'].'properties/properties.field.php';
+// $snippets[$idx]->setProperties($properties);
+
+$idx++;
+$name_lower = 'fieldpropsetexample';
+$snippets[$idx]= $modx->newObject('modSnippet');
+$snippets[$idx]->fromArray(array(
+    'id' => $idx,
+    'name' => 'fieldPropSetExample',
+    'description' => 'Property sets dont work well with fieldSetDefaults. Here is a set to make your own out of if you want to use them, however.',
+    'snippet' => getSnippetContent($sources['source_core'].'/elements/snippets/'.$name_lower.'.snippet.php'),
+));
+// Property sets don't work well with fieldSetDefaults snippet - uncomment and rebuild package if you need them
+// $properties = include $sources['data'].'properties/properties.field.php';
+// $snippets[$idx]->setProperties($properties);
 
 $idx++;
 $name_lower = 'fiprocessarrays';

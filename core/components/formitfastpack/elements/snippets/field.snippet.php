@@ -31,7 +31,7 @@
  * key_prefix - To use the same field names for different forms on the same page, specify a key prefix. (default: '')
  * outer_tpl - The outer template chunk, which can be used for any HTML that stays consistent between fields. This is a good place to put your <label> tags and any wrapping <li> or <div> elements that wrap each field in your form. (default: 'fieldWrapTpl')
  * tpl - The template chunk to use for templating all of the various fields. Each field is separated from the others by wrapping it - both above and below - with the following HTML comment: <!-- fieldtype -->, where fieldtype is the field type. For example, for a text field: <!-- text --> <input type="[[+type]]" name="[[+name]]" value="[[+current_value]]" /> <!-- text --> Use the fieldTypesTpl.chunk.tpl in the chunks directory as the starting point. (default: 'fieldTypesTpl')
- * inner_html - Specify your own HTML instead of using the field template. Useful if you want to use the outer_tpl and smart caching but specify your own HTML for the field. (default: '')
+ * inner_override - Specify your own HTML instead of using the field template. Useful if you want to use the outer_tpl and smart caching but specify your own HTML for the field. (default: '')
  * inner_element - Similar to inner_override, but accepts the name of an element (chunk, snippet...). All of the placeholders and parameters are passed to the element. Note: the inner_element override is not as useful as the options_element, which benefits much more from the smart caching. (default: '')
  * inner_element_class - Specify the classname of the element (such as modChunk, modSnippet, etc...). If using modChunk, you can specify an additional chunks_path parameter to allow file-based chunks. (default: 'modChunk')
  * inner_element_properties - A JSON array of properties to be passed to the element when it is processed. (default: '')
@@ -43,7 +43,7 @@
  *
  * options - If your field is a nested or group type, such as checkbox, radio, or select, specify the options in tv-style format like so: Label One==value1||Label Two==value2||Label Three==value3 or Value1||Value2||Value3. The field snippet uses a sub-type (specified by option_type) to template the options. Setting this parameter causes smart caching to be enabled by default and "selected" or "checked" to be added to the currently selected option, as appropriate. See "mark_slected" and "cache" parameters. (default: '')
  * option_type - Specify the field type used for each option. If left blank, defaults to "bool" if &type is checkbox or radio and "option" if &type is select). (default: '')
- * options_html - same as inner_html, but for the options_html placeholder. Allows you to use your own custom elements while benefiting from the speed gains of the smart caching.  (default: '')
+ * options_override - same as inner_html, but for the options_html placeholder. Allows you to use your own custom elements while benefiting from the speed gains of the smart caching.  (default: '')
  * options_element - same as inner_element, but for the options_html placeholder (default: '')
  * options_element_class - same as inner_element_type, but for the options_html placeholder (default: 'modChunk')
  * options_element_properties - same as inner_element_properties, but for the options_html placeholder (default: '')
