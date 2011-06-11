@@ -32,8 +32,8 @@
  * outer_tpl - The outer template chunk, which can be used for any HTML that stays consistent between fields. This is a good place to put your <label> tags and any wrapping <li> or <div> elements that wrap each field in your form. (default: 'fieldWrapTpl')
  * tpl - The template chunk to use for templating all of the various fields. Each field is separated from the others by wrapping it - both above and below - with the following HTML comment: <!-- fieldtype -->, where fieldtype is the field type. For example, for a text field: <!-- text --> <input type="[[+type]]" name="[[+name]]" value="[[+current_value]]" /> <!-- text --> Use the fieldTypesTpl.chunk.tpl in the chunks directory as the starting point. (default: 'fieldTypesTpl')
  * inner_html - Specify your own HTML instead of using the field template. Useful if you want to use the outer_tpl and smart caching but specify your own HTML for the field. (default: '')
- * inner_element - Similar to inner_override, but accepts the name of an element (chunk, snippet...). All of the placeholders and parameters are passed to the element. (default: '')
- * inner_element_class - Specify the classname of the element (such as modChunk, modSnippet, etc...). (default: 'modChunk')
+ * inner_element - Similar to inner_override, but accepts the name of an element (chunk, snippet...). All of the placeholders and parameters are passed to the element. Note: the inner_element override is not as useful as the options_element, which benefits much more from the smart caching. (default: '')
+ * inner_element_class - Specify the classname of the element (such as modChunk, modSnippet, etc...). If using modChunk, you can specify an additional chunks_path parameter to allow file-based chunks. (default: 'modChunk')
  * inner_element_properties - A JSON array of properties to be passed to the element when it is processed. (default: '')
  * error_class - The name of the class to use for the [[+error_class]] placeholder. This placeholder is generated along with [[+error]] if a FormIt error is found for this field. (default: 'error')
  * to_placeholders - If set, will set all of the placeholders as global MODx placeholders as well. (default: false)
@@ -43,10 +43,10 @@
  *
  * options - If your field is a nested or group type, such as checkbox, radio, or select, specify the options in tv-style format like so: Label One==value1||Label Two==value2||Label Three==value3 or Value1||Value2||Value3. The field snippet uses a sub-type (specified by option_type) to template the options. Setting this parameter causes smart caching to be enabled by default and "selected" or "checked" to be added to the currently selected option, as appropriate. See "mark_slected" and "cache" parameters. (default: '')
  * option_type - Specify the field type used for each option. If left blank, defaults to "bool" if &type is checkbox or radio and "option" if &type is select). (default: '')
- * options_html - same as inner_html, but only for the options_html placeholder (default: '')
- * options_element - same as inner_element, but only for the options_html placeholder (default: '')
- * options_element_class - same as inner_element_type, but only for the options_html placeholder (default: 'modChunk')
- * options_element_properties - same as inner_element_properties, but only for the options_html placeholder (default: '')
+ * options_html - same as inner_html, but for the options_html placeholder. Allows you to use your own custom elements while benefiting from the speed gains of the smart caching.  (default: '')
+ * options_element - same as inner_element, but for the options_html placeholder (default: '')
+ * options_element_class - same as inner_element_type, but for the options_html placeholder (default: 'modChunk')
+ * options_element_properties - same as inner_element_properties, but for the options_html placeholder (default: '')
  * mark_selected - If left blank or set to zero, disables option marking. By default if "options" or an options override is specified, the field snippet will add a marker such as ' checked="checked"' or (if the field type is "select") ' selected="selected"' in the right place, assuming you are using HTML syntax for value (value="X"). This is a lot faster than using FormItIsSelected or FormItIsChecked.   (default: true)
  * selected_text - The text to mark selected options with (such as checked="checked" or selected="selected"). If left blank or set to false, defaults to checked="checked" unless the field type is "select", in which case it uses selected="selected". (default: '')
  *
@@ -73,27 +73,29 @@
  * key - A unique but human-friendly identifier for each field or sub-field (useful for HTML id attributes). Generated from the key_prefix, prefix, field name, and (only if using an option field) value.
  *
  */
- 
 $debug = $modx->getOption('debug',$scriptProperties,false);
 $ffp = $modx->getService('formitfastpack','FormitFastPack',$modx->getOption('ffp.core_path',null,$modx->getOption('core_path').'components/formitfastpack/').'model/formitfastpack/',$scriptProperties);
 if (!($ffp instanceof FormitFastPack)) return 'Package not found.';
 
+// load defaults
+$config = array_merge($ffp->getConfig(),$scriptProperties);
+
 // Important properties
-$name = $modx->getOption('name',$scriptProperties,'');
-$type = $modx->getOption('type',$scriptProperties,'text');
-$prefix = $modx->getOption('prefix',$scriptProperties,'fi.');
-$key_prefix = $modx->getOption('key_prefix',$scriptProperties,'');
+$name = $modx->getOption('name',$config,'');
+$type = $modx->getOption('type',$config,'text');
+$prefix = $modx->getOption('prefix',$config,'fi.');
+$key_prefix = $modx->getOption('key_prefix',$config,'');
 
 // delimiter each field type is bordered by. 
 // example: <!-- textarea --> <input type="textarea" name="[[+name]]">[[+current_value]]</input> <!-- textarea -->
 $delimiter = '<!-- '.$type.' -->';
 // The outer template 
-$outer_tpl = $modx->getOption('outer_tpl',$scriptProperties,'fieldWrapTpl');
+$outer_tpl = $modx->getOption('outer_tpl',$config,'fieldWrapTpl');
 // The main template (contains all field types separated by the delimiter)
-$tpl = $modx->getOption('tpl',$scriptProperties,'fieldTypesTpl');
+$tpl = $modx->getOption('tpl',$config,'fieldTypesTpl');
 
 // For checkboxes, radios, selects, etc... that require inner fields, parse options
-$options = $modx->getOption('options',$scriptProperties,'');
+$options = $modx->getOption('options',$config,'');
 $options_delimiter = '||';
 $options_inner_delimiter = '==';
 
@@ -111,22 +113,22 @@ $default_option_tpl = isset($inner_static[$type]['option_tpl']) ? $inner_static[
 $default_selected_text = isset($inner_static[$type]['selected_text']) ? $inner_static[$type]['selected_text'] : $inner_static['default']['selected_text'];
 
 // Allow overriding the default settings for types from the script properties
-$option_tpl = $modx->getOption('option_type',$scriptProperties, '');
+$option_tpl = $modx->getOption('option_type',$config, '');
 $option_tpl = $option_tpl ? $option_tpl : $default_option_tpl;
-$selected_text = $modx->getOption('selected_text',$scriptProperties, '');
+$selected_text = $modx->getOption('selected_text',$config, '');
 $selected_text = $selected_text ? $selected_text : $default_selected_text;
 
 /*      CACHING         */
 // See if caching is set system-wide or in the scriptProperties
-$cache = $modx->getOption('cache',$scriptProperties,$modx->getOption('ffp.field_default_cache'));
+$cache = $modx->getOption('cache',$config,$modx->getOption('ffp.field_default_cache'));
 // By default, only cache elements that have options.
-$cache = isset($cache) ? $cache : array_key_exists($type,$inner_static) || $modx->getOption('options_element',$scriptProperties,false) || $modx->getOption('inner_element',$scriptProperties,false);
+$cache = isset($cache) ? $cache : array_key_exists($type,$inner_static) || $modx->getOption('options',$config,false)  || $modx->getOption('options_element',$config,false) || $modx->getOption('inner_element',$config,false);
 $already_cached = false;
 if ($cache) {
     if (empty($cacheKey)) $cacheKey = $modx->getOption('cache_resource_key', null, 'resource');
     if (empty($cacheHandler)) $cacheHandler = $modx->getOption('cache_resource_handler', null, $modx->getOption(xPDO::OPT_CACHE_HANDLER, null, 'xPDOFileCache'));
     if (!isset($cacheExpires)) $cacheExpires = (integer) $modx->getOption('cache_resource_expires', null, $modx->getOption(xPDO::OPT_CACHE_EXPIRES, null, 0));
-    if (empty($cacheElementKey)) $cacheElementKey = $modx->resource->getCacheKey() . '/' . md5($modx->toJSON($scriptProperties) . implode('', $modx->request->getParameters()));
+    if (empty($cacheElementKey)) $cacheElementKey = $modx->resource->getCacheKey() . '/' . md5($modx->toJSON($config) . implode('', $modx->request->getParameters()));
     $cacheOptions = array(
         xPDO::OPT_CACHE_KEY => $cacheKey,
         xPDO::OPT_CACHE_HANDLER => $cacheHandler,
@@ -145,13 +147,13 @@ if ($cache) {
 // The following variables do not need to be set if cached content is found
 if (!$cache || !$already_cached) {
     // Set placeholders
-    $placeholders = $scriptProperties;
+    $placeholders = $config;
     // ToDo: Move custom placeholders like this into a setFieldDefaults snippet
-    $placeholders['remote_prefix'] = $modx->getOption('remote_prefix',$scriptProperties,'profile.remote.');
+    $placeholders['remote_prefix'] = $modx->getOption('remote_prefix',$config,'profile.remote.');
     $placeholders['key'] = preg_replace("/[^a-zA-Z0-9\s]/", "", $key_prefix.$name);
 
     // Set overrides for options and inner_html
-    $inner_html = isset($inner_html) ? $inner_html : $modx->getOption('inner_override',$scriptProperties,'');
+    $inner_html = isset($inner_html) ? $inner_html : $modx->getOption('inner_override',$config,'');
 
     // Process element overrides
     $possible_overrides = array('options','inner');
@@ -160,16 +162,22 @@ if (!$cache || !$already_cached) {
         $level_element = $level.'_element';
         $level_element_class = $level.'_element_class';
         $level_element_properties = $level.'_element_properties';
-        ${$level_html} = isset(${$level_html}) ? ${$level_html} : $modx->getOption($level_html,$scriptProperties,'');
-        ${$level_element} = $modx->getOption($level_element,$scriptProperties,'');
-        ${$level_element_class} = $modx->getOption($level_element_class,$scriptProperties,'modChunk');
+        ${$level_html} = isset(${$level_html}) ? ${$level_html} : $modx->getOption($level_html,$config,'');
+        ${$level_element} = $modx->getOption($level_element,$config,'');
+        ${$level_element_class} = $modx->getOption($level_element_class,$config,'modChunk');
+        ${$level_element_properties} = $modx->fromJSON($modx->getOption($level_element_properties,$config,'[]'));
+        $properties = array_merge($placeholders,${$level_element_properties});
         if (${$level_element} && ${$level_element_class}) {
-            $elementObj = $modx->getObject(${$level_element_class}, array('name' => ${$level_element}));
-            if ($elementObj) {
-                ${$level_element_properties} = $modx->fromJSON($modx->getOption($level_element_properties,$scriptProperties,'[]'));
-                $properties .= array_merge($placeholders,${$level_element_properties});
-                ${$level_html} = $elementObj->process($properties);
-                $placeholders[$level.'_html'] = ${$level_html};
+            if (${$level_element_class} === 'modChunk') {
+                // Shortcut - use the cachable chunk method of FFP. Allows file-based chunks.
+                ${$level_html} = $ffp->getChunk(${$level_element}, $properties);
+            } else {
+                // Full route for snippets & others
+                $elementObj = $modx->getObject(${$level_element_class}, array('name' => ${$level_element}));
+                if ($elementObj) {
+                    ${$level_html} = $elementObj->process($properties);
+                    $placeholders[$level.'_html'] = ${$level_html};
+                }
             }
         }
     }
@@ -201,10 +209,10 @@ $current_value = $modx->getPlaceholder($prefix.$name);
 // Set the error and current value placeholders.
 $placeholders['error'] = $error;
 $placeholders['current_value'] = $current_value; // ToDo: add better caching and take this out to a str_replace function.
-$placeholders['error_class'] = $error ? ' '.$modx->getOption('error_class',$scriptProperties,'error') : '';
+$placeholders['error_class'] = $error ? ' '.$modx->getOption('error_class',$config,'error') : '';
 
 // Add selected markers to options - much faster than FormItIsSelected and FormItIsChecked for large forms
-if ($options_html && $selected_text && $modx->getOption('mark_selected',$scriptProperties,true)) {
+if ($options_html && $selected_text && $modx->getOption('mark_selected',$config,true)) {
     $options_html = $ffp->markSelected($options_html,$current_value,$selected_text);
 }
 $placeholders['options_html'] = $options_html;
@@ -215,7 +223,7 @@ if (empty($inner_html)) {
 }
 $placeholders['inner_html'] = $inner_html;
 
-if ($modx->getOption('to_placeholders',$scriptProperties,false)) {
+if ($modx->getOption('to_placeholders',$config,false)) {
     // Set all placeholders globally, not limited just to the template chunks
     $modx->toPlaceholders($placeholders,$key_prefix);
 }
@@ -231,5 +239,4 @@ if ($outer_tpl) {
 if ($cache && !$already_cached && $modx->getCacheManager()) {
     $modx->cacheManager->set($cacheElementKey, $cached, $cacheExpires, $cacheOptions);
 }
-
 return $output;

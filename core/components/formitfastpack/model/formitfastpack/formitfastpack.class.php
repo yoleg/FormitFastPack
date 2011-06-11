@@ -81,6 +81,31 @@ class FormitFastPack {
             }
         }
     }
+    
+    /**
+     * Sets a configuration array
+     * For fieldSetDefaults snippet.
+     *
+     * @access public
+     * @param array $config The configuration array.
+     * @return bool Success.
+     */
+    public function setConfig(array $config = array()) {
+        $this->config = array_merge($this->config,$config);
+        return true;
+    }
+    
+    /**
+     * Loads a configuration array
+     * For fieldSetDefaults snippet.
+     *
+     * @access public
+     * @return array The configuration array.
+     */
+    public function getConfig() {
+        return $this->config;
+    }
+
     /**
      * Adds a marker (such as selected="selected") after a search string such as value="1" if it is found.
      * 
@@ -136,6 +161,7 @@ class FormitFastPack {
             if (!$this->modx->getOption('FormitFastPack.debug',null,false)) {
                 $chunk = $this->modx->getObject('modChunk',array('name' => $name));
             }
+
             if (empty($chunk)) {
                 $chunk = $this->_getTplChunk($name);
                 if ($chunk == $name) return $name;
@@ -146,7 +172,7 @@ class FormitFastPack {
                 $content_subset = $contentArray[1];
                 $chunk = $this->modx->newObject('modChunk');
                 $chunk->setContent($content_subset);
-            } 
+            }
             $this->chunks[$name][$delimiter] = $chunk->getContent();
         } else {
             $o = $this->chunks[$name][$delimiter];
@@ -154,7 +180,6 @@ class FormitFastPack {
             $chunk->setContent($o);
         }
         $chunk->setCacheable(false);
-        // return '<pre>partial: '.$content_subset.' cached: '.$this->chunks[$name].'</pre>';
         return $chunk->process($properties);
     }
     /**
@@ -170,6 +195,7 @@ class FormitFastPack {
         $chunk = $name;
         $suffix = $this->modx->getOption('suffix',$this->config,$suffix);
         $f = $this->config['chunks_path'].strtolower($name).$suffix;
+        if ($name == 'optionscountries') {echo $f; die();}
         if (file_exists($f)) {
             $o = file_get_contents($f);
             $chunk = $this->modx->newObject('modChunk');
