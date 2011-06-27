@@ -1,14 +1,14 @@
 ﻿
 <!-- text -->
-  <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="[[+size:default=`40`]]">
+  <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="[[+size:default=`40`]]" />
 <!-- text -->
 
 <!-- file -->
-  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="[[+size:default=`40`]]">
+  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" />
 <!-- file -->
 
 <!-- hidden -->
-  <input type="[[+hidden]]" name="[[+name]]" value="[[+current_value]]">
+  <input type="[[+hidden]]" name="[[+name]]" value="[[+current_value]]" />
 <!-- hidden -->
 
 <!-- textarea -->
