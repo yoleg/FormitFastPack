@@ -28,9 +28,11 @@
  * name - the name of the field (default: '')
  * type - the field type. Used to decide which subset of the tpl chunk to use. (default: 'text')
  * prefix - the prefix used by the FormIt call this field is for - may also work with EditProfile, Register, etc... snippet calls. (default: 'fi.')
+ * error_prefix - Override the calculated prefix for field errors. Example: 'error.' (default: '')
  * key_prefix - To use the same field names for different forms on the same page, specify a key prefix. (default: '')
  * outer_tpl - The outer template chunk, which can be used for any HTML that stays consistent between fields. This is a good place to put your <label> tags and any wrapping <li> or <div> elements that wrap each field in your form. (default: 'fieldWrapTpl')
  * tpl - The template chunk to use for templating all of the various fields. Each field is separated from the others by wrapping it - both above and below - with the following HTML comment: <!-- fieldtype -->, where fieldtype is the field type. For example, for a text field: <!-- text --> <input type="[[+type]]" name="[[+name]]" value="[[+current_value]]" /> <!-- text --> Use the fieldTypesTpl.chunk.tpl in the chunks directory as the starting point. (default: 'fieldTypesTpl')
+ * chunks_path - Specify a path where file-based chunks are stored in the format lowercasechunkname.chunk.tpl, which will be used if the chunk is not found in the database.
  * inner_override - Specify your own HTML instead of using the field template. Useful if you want to use the outer_tpl and smart caching but specify your own HTML for the field. (default: '')
  * inner_element - Similar to inner_override, but accepts the name of an element (chunk, snippet...). All of the placeholders and parameters are passed to the element. Note: the inner_element override is not as useful as the options_element, which benefits much more from the smart caching. (default: '')
  * inner_element_class - Specify the classname of the element (such as modChunk, modSnippet, etc...). If using modChunk, you can specify an additional chunks_path parameter to allow file-based chunks. (default: 'modChunk')
@@ -84,6 +86,7 @@ $config = array_merge($ffp->getConfig(),$scriptProperties);
 $name = $modx->getOption('name',$config,'');
 $type = $modx->getOption('type',$config,'text');
 $prefix = $modx->getOption('prefix',$config,'fi.');
+$error_prefix = $modx->getOption('error_prefix',$config,'');
 $key_prefix = $modx->getOption('key_prefix',$config,'');
 
 // delimiter each field type is bordered by. 
@@ -191,6 +194,9 @@ if ($options && !$options_html) {
     $options = explode($options_delimiter,$options);
     foreach ($options as $option) {
         $option_array =  explode($options_inner_delimiter,$option);
+        foreach ($option_array as $key => $value) {
+            $option_array[$key] = trim($value);
+        }
         $inner_array = $placeholders;
         $inner_array['label'] = $option_array[0];
         $inner_array['value'] = isset($option_array[1]) ? $option_array[1] : $option_array[0];
@@ -203,7 +209,8 @@ if ($options && !$options_html) {
 $cached = array('options_html' => $options_html,'inner_html' => $inner_html,'placeholders' => $placeholders);
 
 // Grab the error and current value from FormIt placeholders
-$error = $modx->getPlaceholder($prefix.'error.'.$name);
+$error_prefix = $error_prefix ? $error_prefix : $prefix.'error.';
+$error = $modx->getPlaceholder($error_prefix.$name);
 $current_value = $modx->getPlaceholder($prefix.$name);
 
 // Set the error and current value placeholders.

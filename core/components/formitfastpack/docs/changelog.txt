@@ -1,5 +1,11 @@
 ﻿Changelog for FormitFastPack.
 
+FormitFastPack 0.1.1 beta - 0.1.4 beta
+======================================
+- added support for options and field_html generated from any element
+- added error prefix override (for better compatibility with EditProfile)
+- changed the default chunk names
+
 
 FormitFastPack 0.1.0 beta
 ======================================

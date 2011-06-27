@@ -65,8 +65,8 @@ $snippets[$idx]->fromArray(array(
     'snippet' => getSnippetContent($sources['source_core'].'/elements/snippets/'.$name_lower.'.snippet.php'),
 ));
 // Property sets don't work well with fieldSetDefaults snippet - uncomment and rebuild package if you need them
-// $properties = include $sources['data'].'properties/properties.field.php';
-// $snippets[$idx]->setProperties($properties);
+$properties = include $sources['data'].'properties/properties.field.php';
+$snippets[$idx]->setProperties($properties);
 
 $idx++;
 $name_lower = 'fiprocessarrays';

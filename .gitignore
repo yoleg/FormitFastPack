@@ -3,3 +3,4 @@ _build/build.properties.php
 config.core.php
 .idea
 *.zip
+packaged_zip/
