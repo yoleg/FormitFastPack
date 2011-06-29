@@ -1,4 +1,4 @@
-﻿
+
 <!-- text -->
   <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="[[+size:default=`40`]]" />
 <!-- text -->

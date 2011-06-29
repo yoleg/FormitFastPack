@@ -1,4 +1,4 @@
-﻿[[!FormIt? &hooks=`spam,fiProcessArrays,fiGenerateReport,email,redirect` &emailTpl=`exampleFormItEmailReport` &emailTo=`[[++emailsender]]` &emailSubject=`New message from [[++site_name]] [[*pagetitle]] page.` &redirectTo=`6` &submitVar=`submitForm` &figrTpl=`formReportRow`]]
+[[!FormIt? &hooks=`spam,fiProcessArrays,fiGenerateReport,email,redirect` &emailTpl=`exampleFormItEmailReport` &emailTo=`[[++emailsender]]` &emailSubject=`New message from [[++site_name]] [[*pagetitle]] page.` &redirectTo=`6` &submitVar=`submitForm` &figrTpl=`formReportRow`]]
 <div>[[!+fi.validation_error_message]] </div>
 
 <form id="formExample" action="[[~[[*id]]]]" method="post">

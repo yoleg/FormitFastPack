@@ -1,4 +1,4 @@
-﻿<?php /* 
+<?php /* 
  * fiProcessArrays formit hook. Processes all values stored as arrays and implodes them.
  * 
  * options: 

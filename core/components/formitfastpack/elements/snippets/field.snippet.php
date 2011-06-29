@@ -1,4 +1,4 @@
-﻿<?php /**
+<?php /**
  * FormitFastPack
  *
  * Copyright 2010-11 by Oleg Pryadko <oleg@websitezen.com>

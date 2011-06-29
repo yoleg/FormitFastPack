@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 $_lang['formitfastpack'] = 'FormitFastPack';
 $_lang['formitfastpack_desc'] = '';

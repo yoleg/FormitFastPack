@@ -1,4 +1,4 @@
-﻿Changelog for FormitFastPack.
+Changelog for FormitFastPack.
 
 FormitFastPack 0.1.1 beta - 0.1.4 beta
 ======================================
