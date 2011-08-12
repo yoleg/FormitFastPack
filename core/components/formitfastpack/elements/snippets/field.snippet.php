@@ -75,13 +75,16 @@
  * key - A unique but human-friendly identifier for each field or sub-field (useful for HTML id attributes). Generated from the key_prefix, prefix, field name, and (only if using an option field) value.
  *
  */
+
 $debug = $modx->getOption('debug',$scriptProperties,false);
 $ffp = $modx->getService('formitfastpack','FormitFastPack',$modx->getOption('ffp.core_path',null,$modx->getOption('core_path').'components/formitfastpack/').'model/formitfastpack/',$scriptProperties);
 if (false) $ffp = new FormitFastPack($modx); // never used - debug only
 if (!($ffp instanceof FormitFastPack)) return 'Package not found.';
 
+
 // load defaults
-$config = array_merge($ffp->getConfig(),$scriptProperties);
+$defaults = $ffp->getConfig();
+$config = array_merge($defaults,$scriptProperties);
 
 // Important properties
 $name = $modx->getOption('name',$config,'');
@@ -104,6 +107,7 @@ $tpl = $modx->getOption('tpl',$config,'fieldTypesTpl');
 
 // For checkboxes, radios, selects, etc... that require inner fields, parse options
 $options = $modx->getOption('options',$config,'');
+$options_html = $modx->getOption('options_html',$config,'');
 $options_delimiter = $modx->getOption('options_delimiter',$config,'||');
 $options_inner_delimiter = $modx->getOption('options_inner_delimiter',$config,'==');
 // Set defaults for the options of certain field types and allow to override from a system settings JSON array
@@ -125,6 +129,7 @@ $option_tpl = $option_tpl ? $option_tpl : $default_option_tpl;
 $selected_text = $modx->getOption('selected_text',$config, '');
 $selected_text = $selected_text ? $selected_text : $default_selected_text;
 
+
 /*      CACHING         */
 // See if caching is set system-wide or in the scriptProperties
 $cache = $modx->getOption('cache',$config,$modx->getOption('ffp.field_default_cache',null,'auto'));
@@ -133,7 +138,7 @@ if ($cache == 'auto') {
     $auto_cache = (array_key_exists($type,$inner_static) || $modx->getOption('options',$config,false)  || $modx->getOption('options_element',$config,false) || $modx->getOption('inner_element',$config,false));
     $cache = $auto_cache ? 1 : 0;
     // temporarily set auto_cach to always 1
-    $cache = 1;
+    $cache = true;
 }
 $already_cached = false;
 if ($cache) {
@@ -157,15 +162,34 @@ if ($cache) {
     }
 }
 
-// The following variables do not need to be set if cached content is found
-if (!$cache || !$already_cached) {
+// Skip all of the following if cached content is found
+if ((!$cache) || (!$already_cached)) {
     // Set placeholders
     $placeholders = $config;
+	
     // set defaults as placeholders as well
     $get_defaults = explode(',','type,prefix,error_prefix,name,key_prefix,tpl,options_tpl,outer_tpl');
     foreach ($get_defaults as $var) {
-        $placeholders[$var] = ${$var};
+        $placeholders[$var] = (string) ${$var};
     }
+	
+	// load custom placeholders - not essential, but helps a lot with speed.
+	$custom_ph = $modx->getOption('custom_ph',$config,$modx->getOption('ffp.custom_ph',null,'class,multiple,array,header,default,class,outer_class,label,note,note_class,size,title,req,message,clear_message'));
+	$custom_ph = explode(',',$custom_ph);
+	foreach ($custom_ph as $key) {
+		if (!isset($placeholders[$key])) $placeholders[$key] = '';
+	}
+	
+	// set placeholders for field types (e.g [[+checkbox:notempty=`checkbox stuff`]])
+	$set_type_ph = $modx->getOption('set_type_ph',$config,'text,textarea,checkbox,radio,select');
+	if ($set_type_ph) {
+		$types = explode(',',$set_type_ph);
+		foreach ($types as $key) {
+			$placeholders[$key] = ($key == $type) ? '1' : '';
+		}
+	}
+	
+	// generate unique key
     $placeholders['key'] = preg_replace("/[^a-zA-Z0-9\s]/", "", $key_prefix.$name);
 
     // Set overrides for options and inner_html
@@ -197,29 +221,51 @@ if (!$cache || !$already_cached) {
             }
         }
     }
+
+    // set almost-final inner and outer html
     if (empty($inner_html)) $inner_html = $ffp->getChunkContent($tpl,$delimiter);
     if (empty($outer_html)) $outer_html = $ffp->getChunkContent($outer_tpl,$outer_delimiter);
 
+    // If outer template is set, process it. Otherwise just use the $inner_html
+    $double_processing_needed = false;
+    $outer_html = empty($outer_html) ? $inner_html : $outer_html;
+    $inner_no_replace = '[[+inner_html:';
+    $inner_replace = '[[+inner_html]]';
+    if (strpos($outer_html,$inner_no_replace) !== false) {
+        $double_processing_needed = true;
+    } else {
+        $outer_html = str_replace($inner_replace,$inner_html,$outer_html);
+    }
+
+    // unset any variable placeholders
+    $variables = array('error','current_value','error_class','options_html','inner_html','outer_html');
+    foreach ($variables as $key) {
+        if (isset($placeholders[$key])) unset($placeholders[$key]);
+    }
+	$outer_html = $ffp->processContent($outer_html,$placeholders);
+
+	
+    // Parse options for checkboxes, radios, etc... if &options is passed
+    // Note: if any provided options_html has been found, this part will be skipped
+    if ($options && !$options_html) {
+        $inner_delimiter = '<!-- '.$option_tpl.' -->';
+        $options_html = '';
+        $options = explode($options_delimiter,$options);
+        foreach ($options as $option) {
+            $option_array =  explode($options_inner_delimiter,$option);
+            foreach ($option_array as $key => $value) {
+                $option_array[$key] = trim($value);
+            }
+            $inner_array = $placeholders;
+            $inner_array['label'] = $option_array[0];
+            $inner_array['value'] = isset($option_array[1]) ? $option_array[1] : $option_array[0];
+            $inner_array['key'] = $placeholders['key'].'-'.preg_replace("/[^a-zA-Z0-9-\s]/", "", $inner_array['value']);
+            $options_html .= $ffp->getChunk($tpl,$inner_array,$inner_delimiter);
+        }
+    }
+
 }
 
-// Parse options for checkboxes, radios, etc... if &options is passed
-// Note: if cached options_html has been found, this part will be skipped
-if ($options && !$options_html) {
-    $inner_delimiter = '<!-- '.$option_tpl.' -->';
-    $options_html = '';
-    $options = explode($options_delimiter,$options);
-    foreach ($options as $option) {
-        $option_array =  explode($options_inner_delimiter,$option);
-        foreach ($option_array as $key => $value) {
-            $option_array[$key] = trim($value);
-        }
-        $inner_array = $placeholders;
-        $inner_array['label'] = $option_array[0];
-        $inner_array['value'] = isset($option_array[1]) ? $option_array[1] : $option_array[0];
-        $inner_array['key'] = $placeholders['key'].'-'.preg_replace("/[^a-zA-Z0-9-\s]/", "", $inner_array['value']);
-        $options_html .= $ffp->getChunk($tpl,$inner_array,$inner_delimiter);
-    }
-}
 
 // cache everything up to this point if cache is enabled
 $cached = array('options_html' => $options_html,'inner_html' => $inner_html,'outer_html' => $outer_html,'placeholders' => $placeholders);
@@ -228,7 +274,7 @@ $cached = array('options_html' => $options_html,'inner_html' => $inner_html,'out
 $error_prefix = $error_prefix ? $error_prefix : $prefix.'error.';
 $error = $modx->getPlaceholder($error_prefix.$name);
 $current_value = $modx->getPlaceholder($prefix.$name);
-$use_get = $modx->getOption('use_get',$scriptProperties,true);
+$use_get = $modx->getOption('use_get',$scriptProperties,false);
 $use_request = $modx->getOption('use_request',$scriptProperties,false);
 $use_cookies = $modx->getOption('use_cookies',$scriptProperties,false);
 if ($current_value == '' && $use_get) {
@@ -246,41 +292,45 @@ if ($use_cookies) {
 // Set the error and current value placeholders.
 $placeholders['error'] = $error;
 $placeholders['current_value'] = $current_value; // ToDo: add better caching and take this out to a str_replace function.
-$placeholders['error_class'] = $error ? ' '.$modx->getOption('error_class',$config,'error') : '';
+$placeholders['error_class'] = $error ? (' '.$modx->getOption('error_class',$config,'error')) : '';
 
 // Add selected markers to options - much faster than FormItIsSelected and FormItIsChecked for large forms
 if ($options_html && $selected_text && $modx->getOption('mark_selected',$config,true)) {
     $options_html = $ffp->markSelected($options_html,$current_value,$selected_text);
 }
 $placeholders['options_html'] = $options_html;
+$placeholders['inner_html'] = $inner_html;
+$placeholders['outer_html'] = $outer_html;
 
+// Process outer_tpl first ONLY if inner_html ph has output filters.
+// Warning: this may cause unexpected results due to double processing.
+if ($double_processing_needed) {
+    $outer_html = $ffp->getChunk($outer_tpl,$placeholders);
+    // $placeholders['outer_html'] = $outer_html;
+}
 
+// Optionally set all placeholders globally
 if ($modx->getOption('to_placeholders',$config,false)) {
-    // Set all placeholders globally, not limited just to the template chunks
     $modx->toPlaceholders($placeholders,$key_prefix);
 }
-
-// If outer template is set, process it. Otherwise just use the $inner_html
-$output = $inner_html;
-if (!empty($outer_html)) {
-    $output = $outer_html;
-    $inner_no_replace = '[[+inner_html:';
-    $inner_replace = '[[+inner_html]]';
-    if (strpos($output,$inner_no_replace) === false) {
-        $output = str_replace($inner_replace,$inner_html,$output);
-    } else {
-        // Process with inner_html first if it has output filters.
-        // Warning: this may cause unexpected results due to double processing.
-        $placeholders['inner_html'] = $inner_html;
-        $output = $ffp->getChunk($outer_tpl,$placeholders);
-    }
-}
-
-// process the chunk
+// Process the placeholders. With caching, this should be the only time a chunk is processed.
+$output = $outer_html;
 $output = $ffp->processContent($output,$placeholders);
 
 // Put the cache array into the cache.
 if ($cache && !$already_cached && $modx->getCacheManager()) {
     $modx->cacheManager->set($cacheElementKey, $cached, $cacheExpires, $cacheOptions);
 }
+
+if ($debug) {
+	$unprocessed = str_replace('[','&#91;',htmlentities($outer_html));
+	$unprocessed = str_replace(']','&#93;',$unprocessed);
+	$placeholders['double_processing_needed'] = (string) ($double_processing_needed * 1);
+	$output = '<pre>'.htmlentities(print_r($placeholders,1));
+	$output .= "\nUnprocessed Output: ";
+	$output .= $unprocessed;
+	$output .= "\n\n </pre>";
+}
+// if (strpos($output,'[[+') !== false) die($output);
+
 return $output;

@@ -171,12 +171,16 @@ class FormitFastPack {
      * @param array $properties The properties for the Chunk
      * @return
      */
-    public function processContent($content = '',$properties=array()) {
+    public function processContent($content,$properties=array()) {
+        $ph = array();
+        foreach($properties as $key => $value) {
+            $ph[$key] = (string) $value;
+        }
         if (false) $chunk = new modChunk($this->modx);
         $chunk = $this->modx->newObject('modChunk');
         $chunk->setContent($content);
         $chunk->setCacheable(false);
-        $output =  $chunk->process($properties);
+        $output = $chunk->process($ph);
         return $output;
     }
     /**
