@@ -151,42 +151,70 @@ class FormitFastPack {
     }
 
     /**
-     * Gets a Chunk and caches it; also falls back to file-based templates
-     * for easier debugging.
-     *
-     * Will always use the file-based chunk if $debug is set to true.
+     * Gets a Chunk and caches it; also falls back to file-based templates for easier debugging.
      *
      * @access public
-     * @param string $name The name of the Chunk
+     * @param string $name The name of the Chunk (or the content of the chunk).
      * @param array $properties The properties for the Chunk
+     * @param string $delimiter The delimiter to split the chunk by. Use 'none' to use the entire chunk.
      * @return string The processed content of the Chunk
      */
     public function getChunk($name,$properties = array(),$delimiter = 'none') {
         $chunk = null;
+        $o = $this->getChunkContent($name,$delimiter);
+        $output = $this->processContent($o,$properties);
+        return $output;
+    }
+    /**
+     * Processes a string as if it were the content of a chunk.
+     * @param string $content The unprocessed content of the chunk
+     * @param array $properties The properties for the Chunk
+     * @return
+     */
+    public function processContent($content = '',$properties=array()) {
+        if (false) $chunk = new modChunk($this->modx);
+        $chunk = $this->modx->newObject('modChunk');
+        $chunk->setContent($content);
+        $chunk->setCacheable(false);
+        $output =  $chunk->process($properties);
+        return $output;
+    }
+    /**
+     * Gets the content of a chunk.
+     * Uses file-based chunks if database chunks not available.
+     * Will always use the file-based chunk if $debug is set to true.
+     * @param string $name The name of the Chunk
+     * @param string $delimiter The delimiter to split the chunk by. Use 'none' to use the entire chunk.
+     * @return string The unprocessed content of the Chunk
+     */
+    public function getChunkContent($name,$delimiter = 'none') {
+        $chunk = null;
         if (!isset($this->chunks[$name][$delimiter])) {
+            // first, try getting chunk from database
             if (!$this->modx->getOption('FormitFastPack.debug',null,false)) {
                 $chunk = $this->modx->getObject('modChunk',array('name' => $name));
             }
-
-            if (empty($chunk)) {
-                $chunk = $this->_getTplChunk($name);
-                if ($chunk == $name) return $name;
+            // get chunk content if exists, or try from file if not
+            if (!empty($chunk)) {
+                $content = $chunk->getContent();
+            } else {
+                $content = $this->_getTplChunkContent($name);
+                if ($content == $name) return $name;
             }
+            // explode by delimiter unless delimiter is 'none'
+            if (empty($delimiter)) return 'Type not found.';
             if ($delimiter != 'none') {
-                $content_full = $chunk->getContent();
-                $contentArray = explode($delimiter,$content_full);
-                $content_subset = $contentArray[1];
-                $chunk = $this->modx->newObject('modChunk');
-                $chunk->setContent($content_subset);
+                if (strpos($content,$delimiter) === false) return ''.$delimiter;
+                $contentArray = explode($delimiter,' '.$content);
+                $content = $contentArray[1];
             }
-            $this->chunks[$name][$delimiter] = $chunk->getContent();
+            // cache for the lifetime of the request
+            $this->chunks[$name][$delimiter] = $content;
         } else {
-            $o = $this->chunks[$name][$delimiter];
-            $chunk = $this->modx->newObject('modChunk');
-            $chunk->setContent($o);
+            // retreive the cached content of the chunk
+            $content = $this->chunks[$name][$delimiter];
         }
-        $chunk->setCacheable(false);
-        return $chunk->process($properties);
+        return $content;
     }
     /**
      * Returns a modChunk object from a template file.
@@ -197,17 +225,13 @@ class FormitFastPack {
      * @return modChunk/boolean Returns the modChunk object if found, otherwise
      * false.
      */
-    private function _getTplChunk($name,$suffix = '.chunk.tpl') {
-        $chunk = $name;
+    private function _getTplChunkContent($name,$suffix = '.chunk.tpl') {
+        $o = $name;
         $suffix = $this->modx->getOption('suffix',$this->config,$suffix);
         $f = $this->config['chunks_path'].strtolower($name).$suffix;
-        if ($name == 'optionscountries') {echo $f; die();}
         if (file_exists($f)) {
             $o = file_get_contents($f);
-            $chunk = $this->modx->newObject('modChunk');
-            $chunk->set('name',$name);
-            $chunk->setContent($o);
         }
-        return $chunk;
+        return $o;
     }
 }

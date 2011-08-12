@@ -77,6 +77,7 @@
  */
 $debug = $modx->getOption('debug',$scriptProperties,false);
 $ffp = $modx->getService('formitfastpack','FormitFastPack',$modx->getOption('ffp.core_path',null,$modx->getOption('core_path').'components/formitfastpack/').'model/formitfastpack/',$scriptProperties);
+if (false) $ffp = new FormitFastPack($modx); // never used - debug only
 if (!($ffp instanceof FormitFastPack)) return 'Package not found.';
 
 // load defaults
@@ -85,23 +86,26 @@ $config = array_merge($ffp->getConfig(),$scriptProperties);
 // Important properties
 $name = $modx->getOption('name',$config,'');
 $type = $modx->getOption('type',$config,'text');
+$outer_type = $modx->getOption('outer_type',$config,'');
 $prefix = $modx->getOption('prefix',$config,'fi.');
 $error_prefix = $modx->getOption('error_prefix',$config,'');
 $key_prefix = $modx->getOption('key_prefix',$config,'');
 
 // delimiter each field type is bordered by. 
 // example: <!-- textarea --> <input type="textarea" name="[[+name]]">[[+current_value]]</input> <!-- textarea -->
-$delimiter = '<!-- '.$type.' -->';
-// The outer template 
+$delimiter_template = $modx->getOption('delimiter_template',$config,'<!-- [[+type]] -->');
+$delimiter = str_replace('[[+type]]',$type,$delimiter_template);
+$outer_delimiter = empty($outer_type) ? 'none' : str_replace('[[+type]]',$outer_type,$delimiter_template);
+
+// The outer template
 $outer_tpl = $modx->getOption('outer_tpl',$config,'fieldWrapTpl');
 // The main template (contains all field types separated by the delimiter)
 $tpl = $modx->getOption('tpl',$config,'fieldTypesTpl');
 
 // For checkboxes, radios, selects, etc... that require inner fields, parse options
 $options = $modx->getOption('options',$config,'');
-$options_delimiter = '||';
-$options_inner_delimiter = '==';
-
+$options_delimiter = $modx->getOption('options_delimiter',$config,'||');
+$options_inner_delimiter = $modx->getOption('options_inner_delimiter',$config,'==');
 // Set defaults for the options of certain field types and allow to override from a system settings JSON array
 $inner_static = $modx->fromJSON($modx->getOption('ffp.inner_options_static',null,'[]'));
 if (empty($inner_static)) {
@@ -123,9 +127,14 @@ $selected_text = $selected_text ? $selected_text : $default_selected_text;
 
 /*      CACHING         */
 // See if caching is set system-wide or in the scriptProperties
-$cache = $modx->getOption('cache',$config,$modx->getOption('ffp.field_default_cache'));
+$cache = $modx->getOption('cache',$config,$modx->getOption('ffp.field_default_cache',null,'auto'));
 // By default, only cache elements that have options.
-$cache = isset($cache) ? $cache : array_key_exists($type,$inner_static) || $modx->getOption('options',$config,false)  || $modx->getOption('options_element',$config,false) || $modx->getOption('inner_element',$config,false);
+if ($cache == 'auto') {
+    $auto_cache = (array_key_exists($type,$inner_static) || $modx->getOption('options',$config,false)  || $modx->getOption('options_element',$config,false) || $modx->getOption('inner_element',$config,false));
+    $cache = $auto_cache ? 1 : 0;
+    // temporarily set auto_cach to always 1
+    $cache = 1;
+}
 $already_cached = false;
 if ($cache) {
     if (empty($cacheKey)) $cacheKey = $modx->getOption('cache_resource_key', null, 'resource');
@@ -139,10 +148,11 @@ if ($cache) {
     );
     $cached = $modx->cacheManager->get($cacheElementKey, $cacheOptions);
     // Get the cached values and set them as necessary
-    if (isset($cached['options_html']) && isset($cached['placeholders']) && isset($cached['inner_html'])) {
+    if (isset($cached['options_html']) && isset($cached['placeholders']) && isset($cached['inner_html']) && isset($cached['outer_html'])) {
         $options_html = $cached['options_html'];
         $placeholders = $cached['placeholders'];
         $inner_html = $cached['inner_html'];
+        $outer_html = $cached['outer_html'];
         $already_cached = true;
     }
 }
@@ -151,8 +161,11 @@ if ($cache) {
 if (!$cache || !$already_cached) {
     // Set placeholders
     $placeholders = $config;
-    // ToDo: Move custom placeholders like this into a setFieldDefaults snippet
-    $placeholders['remote_prefix'] = $modx->getOption('remote_prefix',$config,'profile.remote.');
+    // set defaults as placeholders as well
+    $get_defaults = explode(',','type,prefix,error_prefix,name,key_prefix,tpl,options_tpl,outer_tpl');
+    foreach ($get_defaults as $var) {
+        $placeholders[$var] = ${$var};
+    }
     $placeholders['key'] = preg_replace("/[^a-zA-Z0-9\s]/", "", $key_prefix.$name);
 
     // Set overrides for options and inner_html
@@ -184,6 +197,9 @@ if (!$cache || !$already_cached) {
             }
         }
     }
+    if (empty($inner_html)) $inner_html = $ffp->getChunkContent($tpl,$delimiter);
+    if (empty($outer_html)) $outer_html = $ffp->getChunkContent($outer_tpl,$outer_delimiter);
+
 }
 
 // Parse options for checkboxes, radios, etc... if &options is passed
@@ -206,12 +222,26 @@ if ($options && !$options_html) {
 }
 
 // cache everything up to this point if cache is enabled
-$cached = array('options_html' => $options_html,'inner_html' => $inner_html,'placeholders' => $placeholders);
+$cached = array('options_html' => $options_html,'inner_html' => $inner_html,'outer_html' => $outer_html,'placeholders' => $placeholders);
 
 // Grab the error and current value from FormIt placeholders
 $error_prefix = $error_prefix ? $error_prefix : $prefix.'error.';
 $error = $modx->getPlaceholder($error_prefix.$name);
 $current_value = $modx->getPlaceholder($prefix.$name);
+$use_get = $modx->getOption('use_get',$scriptProperties,true);
+$use_request = $modx->getOption('use_request',$scriptProperties,false);
+$use_cookies = $modx->getOption('use_cookies',$scriptProperties,false);
+if ($current_value == '' && $use_get) {
+	$current_value = $modx->getOption($name,$_GET,'');
+}
+if ($current_value == '' && $use_request) {
+	$current_value = $modx->getOption($name,$_REQUEST,'');
+}
+if ($use_cookies) {
+	$session_key = 'field.'.$key.$name;
+	$current_value = ($current_value == '') ? $modx->getOption($session_key,$_SESSION,'') : $current_value;
+	$_SESSION[$session_key] = $current_value;
+}
 
 // Set the error and current value placeholders.
 $placeholders['error'] = $error;
@@ -224,11 +254,6 @@ if ($options_html && $selected_text && $modx->getOption('mark_selected',$config,
 }
 $placeholders['options_html'] = $options_html;
 
-// Process inner_html
-if (empty($inner_html)) {
-    $inner_html = $ffp->getChunk($tpl,$placeholders,$delimiter);
-}
-$placeholders['inner_html'] = $inner_html;
 
 if ($modx->getOption('to_placeholders',$config,false)) {
     // Set all placeholders globally, not limited just to the template chunks
@@ -236,11 +261,23 @@ if ($modx->getOption('to_placeholders',$config,false)) {
 }
 
 // If outer template is set, process it. Otherwise just use the $inner_html
-if ($outer_tpl) {
-    $output = $ffp->getChunk($outer_tpl,$placeholders);
-} else {
-    $output = $inner_html;
+$output = $inner_html;
+if (!empty($outer_html)) {
+    $output = $outer_html;
+    $inner_no_replace = '[[+inner_html:';
+    $inner_replace = '[[+inner_html]]';
+    if (strpos($output,$inner_no_replace) === false) {
+        $output = str_replace($inner_replace,$inner_html,$output);
+    } else {
+        // Process with inner_html first if it has output filters.
+        // Warning: this may cause unexpected results due to double processing.
+        $placeholders['inner_html'] = $inner_html;
+        $output = $ffp->getChunk($outer_tpl,$placeholders);
+    }
 }
+
+// process the chunk
+$output = $ffp->processContent($output,$placeholders);
 
 // Put the cache array into the cache.
 if ($cache && !$already_cached && $modx->getCacheManager()) {

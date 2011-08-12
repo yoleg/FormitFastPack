@@ -1,18 +1,18 @@
 
 <!-- text -->
-  <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" size="[[+size:default=`40`]]" />
+  <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value:default=`[[+default]]`]]" class="[[+type]] [[+class]][[+error_class]]" size="[[+size:default=`40`]]" />
 <!-- text -->
 
 <!-- file -->
-  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" value="[[+current_value]]" class="[[+class]][[+error_class]]" />
+  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" value="[[+current_value]]" class="[[+type]] [[+class]][[+error_class]]" />
 <!-- file -->
 
 <!-- hidden -->
-  <input type="[[+hidden]]" name="[[+name]]" value="[[+current_value]]" />
+  <input type="[[+type]]" name="[[+name]]" value="[[+current_value:default=`[[+default]]`]]" />
 <!-- hidden -->
 
 <!-- textarea -->
-  <textarea id="[[+name]]" class="[[+type]] [[+class]][[+error_class]]" name="[[+name]]">[[+current_value]]</textarea>
+  <textarea id="[[+name]]" class="[[+type]] [[+class]][[+error_class]]" name="[[+name]]">[[+current_value:default=`[[+default]]`]]</textarea>
 <!-- textarea -->
 
 <!-- checkbox -->
@@ -44,8 +44,8 @@
 <!-- static -->
 
 <!-- submit -->
-<input id="[[+name]]" class="button" name="[[+name]]" type="[[+type]]" value="[[+message:default=`Submit`]]" />
-<input id="[[+name]]-clear" class="button" type="reset" value="[[+clear_message:default=`Clear Form`]]" />
+<input id="[[+name]]" class="button [[+type]] [[+class]]" name="[[+name]]" type="[[+type]]" value="[[+message:default=`Submit`]]" />
+<input id="[[+name]]-clear" class="button [[+type]] [[+class]]" type="reset" value="[[+clear_message:default=`Clear Form`]]" />
 <!-- submit -->
 
 <!-- option --><option value="[[+value]]">[[+label]]</option><!-- option -->
