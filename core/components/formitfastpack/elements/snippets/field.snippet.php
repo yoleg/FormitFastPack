@@ -168,7 +168,7 @@ if ((!$cache) || (!$already_cached)) {
     $placeholders = $config;
 	
     // set defaults as placeholders as well
-    $get_defaults = explode(',','type,prefix,error_prefix,name,key_prefix,tpl,options_tpl,outer_tpl');
+    $get_defaults = explode(',','name,type,outer_type,prefix,error_prefix,key_prefix,tpl,options_tpl,outer_tpl');
     foreach ($get_defaults as $var) {
         $placeholders[$var] = (string) ${$var};
     }
