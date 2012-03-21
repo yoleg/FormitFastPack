@@ -1,10 +1,9 @@
-
-<!-- text -->
+<!-- default -->
   <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value:default=`[[+default]]`]]" class="[[+type]] [[+class]][[+error_class]]" size="[[+size:default=`40`]]" />
-<!-- text -->
+<!-- default -->
 
 <!-- file -->
-  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" value="[[+current_value]]" class="[[+type]] [[+class]][[+error_class]]" />
+  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" class="[[+type]] [[+class]][[+error_class]]" />
 <!-- file -->
 
 <!-- hidden -->

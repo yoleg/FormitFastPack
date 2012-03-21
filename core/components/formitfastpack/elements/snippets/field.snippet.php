@@ -27,11 +27,12 @@
  * debug - turn on debugging (default: false)
  * name - the name of the field (default: '')
  * type - the field type. Used to decide which subset of the tpl chunk to use. (default: 'text')
+ * outer_type - Override the type for the outer template. (default: '')
  * prefix - the prefix used by the FormIt call this field is for - may also work with EditProfile, Register, etc... snippet calls. (default: 'fi.')
  * error_prefix - Override the calculated prefix for field errors. Example: 'error.' (default: '')
  * key_prefix - To use the same field names for different forms on the same page, specify a key prefix. (default: '')
- * outer_tpl - The outer template chunk, which can be used for any HTML that stays consistent between fields. This is a good place to put your <label> tags and any wrapping <li> or <div> elements that wrap each field in your form. (default: 'fieldWrapTpl')
- * tpl - The template chunk to use for templating all of the various fields. Each field is separated from the others by wrapping it - both above and below - with the following HTML comment: <!-- fieldtype -->, where fieldtype is the field type. For example, for a text field: <!-- text --> <input type="[[+type]]" name="[[+name]]" value="[[+current_value]]" /> <!-- text --> Use the fieldTypesTpl.chunk.tpl in the chunks directory as the starting point. (default: 'fieldTypesTpl')
+ * tpl - The template chunk to use for templating all of the various fields. Each field is separated from the others by wrapping it - both above and below - with the following HTML comment: <!-- fieldtype -->, where fieldtype is the field type. For example, for a text field: <!-- text --> <input type="[[+type]]" name="[[+name]]" value="[[+current_value]]" /> <!-- text --> Use the fieldTypesTpl.chunk.tpl in the chunks directory as the starting point. NEW: if the delimiter is not found, it tries using the default delimiter (<!-- default -->) if it is present. If neither the type delimiter or the default delimiter is present, it returns the entire chunk template. (default: 'fieldTypesTpl')
+ * outer_tpl - The outer template chunk, which can be used for any HTML that stays consistent between fields. This is a good place to put your <label> tags and any wrapping <li> or <div> elements that wrap each field in your form. NEW: can now can use delimiters like the tpl.  (default: 'fieldWrapTpl')
  * chunks_path - Specify a path where file-based chunks are stored in the format lowercasechunkname.chunk.tpl, which will be used if the chunk is not found in the database.
  * inner_override - Specify your own HTML instead of using the field template. Useful if you want to use the outer_tpl and smart caching but specify your own HTML for the field. (default: '')
  * inner_element - Similar to inner_override, but accepts the name of an element (chunk, snippet...). All of the placeholders and parameters are passed to the element. Note: the inner_element override is not as useful as the options_element, which benefits much more from the smart caching. (default: '')
@@ -98,7 +99,10 @@ $key_prefix = $modx->getOption('key_prefix',$config,'');
 // example: <!-- textarea --> <input type="textarea" name="[[+name]]">[[+current_value]]</input> <!-- textarea -->
 $delimiter_template = $modx->getOption('delimiter_template',$config,'<!-- [[+type]] -->');
 $delimiter = str_replace('[[+type]]',$type,$delimiter_template);
-$outer_delimiter = empty($outer_type) ? 'none' : str_replace('[[+type]]',$outer_type,$delimiter_template);
+$default_delimiter = $modx->getOption('default_delimiter',$config,'default');
+$default_delimiter = str_replace('[[+type]]',$default_delimiter,$delimiter_template);
+// default to the field type for outer type. If the delimiter is not found, it will use the default delimiter. If the default delimiter is not found, it will use the entire outer_tpl.
+$outer_delimiter = empty($outer_type) ? $delimiter : str_replace('[[+type]]',$outer_type,$delimiter_template);
 
 // The outer template
 $outer_tpl = $modx->getOption('outer_tpl',$config,'fieldWrapTpl');
@@ -158,6 +162,7 @@ if ($cache) {
         $placeholders = $cached['placeholders'];
         $inner_html = $cached['inner_html'];
         $outer_html = $cached['outer_html'];
+        $double_processing_needed = $cached['double_processing_needed'];
         $already_cached = true;
     }
 }
@@ -168,7 +173,7 @@ if ((!$cache) || (!$already_cached)) {
     $placeholders = $config;
 	
     // set defaults as placeholders as well
-    $get_defaults = explode(',','name,type,outer_type,prefix,error_prefix,key_prefix,tpl,options_tpl,outer_tpl');
+    $get_defaults = explode(',','name,type,outer_type,prefix,error_prefix,key_prefix,tpl,option_tpl,outer_tpl');
     foreach ($get_defaults as $var) {
         $placeholders[$var] = (string) ${$var};
     }
@@ -190,7 +195,7 @@ if ((!$cache) || (!$already_cached)) {
 	}
 	
 	// generate unique key
-    $placeholders['key'] = preg_replace("/[^a-zA-Z0-9\s]/", "", $key_prefix.$name);
+    $unique_key = $placeholders['key'] = preg_replace("/[^a-zA-Z0-9\s]/", "", $key_prefix.$name);
 
     // Set overrides for options and inner_html
     $inner_html = isset($inner_html) ? $inner_html : $modx->getOption('inner_override',$config,'');
@@ -223,8 +228,8 @@ if ((!$cache) || (!$already_cached)) {
     }
 
     // set almost-final inner and outer html
-    if (empty($inner_html)) $inner_html = $ffp->getChunkContent($tpl,$delimiter);
-    if (empty($outer_html)) $outer_html = $ffp->getChunkContent($outer_tpl,$outer_delimiter);
+    if (empty($inner_html)) $inner_html = $ffp->getChunkContent($tpl,$delimiter,$default_delimiter);
+    if (empty($outer_html)) $outer_html = $ffp->getChunkContent($outer_tpl,$outer_delimiter,$default_delimiter);
 
     // If outer template is set, process it. Otherwise just use the $inner_html
     $double_processing_needed = false;
@@ -268,23 +273,29 @@ if ((!$cache) || (!$already_cached)) {
 
 
 // cache everything up to this point if cache is enabled
-$cached = array('options_html' => $options_html,'inner_html' => $inner_html,'outer_html' => $outer_html,'placeholders' => $placeholders);
+$cached = array(
+    'options_html' => $options_html,
+    'inner_html' => $inner_html,
+    'outer_html' => $outer_html,
+    'placeholders' => $placeholders,
+    'double_processing_needed' => $double_processing_needed,
+);
 
 // Grab the error and current value from FormIt placeholders
 $error_prefix = $error_prefix ? $error_prefix : $prefix.'error.';
 $error = $modx->getPlaceholder($error_prefix.$name);
 $current_value = $modx->getPlaceholder($prefix.$name);
-$use_get = $modx->getOption('use_get',$scriptProperties,false);
-$use_request = $modx->getOption('use_request',$scriptProperties,false);
-$use_cookies = $modx->getOption('use_cookies',$scriptProperties,false);
-if ($current_value == '' && $use_get) {
-	$current_value = $modx->getOption($name,$_GET,'');
+$use_get = $modx->getOption('use_get',$config,false);
+$use_request = $modx->getOption('use_request',$config,false);
+$use_cookies = $modx->getOption('use_cookies',$config,false);
+if (($current_value == '') && $use_get) {
+	$current_value = isset($_GET[$name]) ? $_REQUEST[$name] : '';
 }
-if ($current_value == '' && $use_request) {
-	$current_value = $modx->getOption($name,$_REQUEST,'');
+if (($current_value == '') && $use_request) {
+	$current_value = isset($_REQUEST[$name]) ? $_REQUEST[$name] : '';
 }
 if ($use_cookies) {
-	$session_key = 'field.'.$key.$name;
+	$session_key = 'field.'.$placeholders['key'].$name;
 	$current_value = ($current_value == '') ? $modx->getOption($session_key,$_SESSION,'') : $current_value;
 	$_SESSION[$session_key] = $current_value;
 }
@@ -332,5 +343,4 @@ if ($debug) {
 	$output .= "\n\n </pre>";
 }
 // if (strpos($output,'[[+') !== false) die($output);
-
 return $output;

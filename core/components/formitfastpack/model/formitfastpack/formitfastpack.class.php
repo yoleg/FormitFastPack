@@ -72,7 +72,8 @@ class FormitFastPack {
         ),$config);
 
         /* load debugging settings */
-        if ($this->modx->getOption('debug',$this->config,false)) {
+        $debug = $this->modx->getOption('debug',$this->config,false);
+        if ($debug) {
             error_reporting(E_ALL); ini_set('display_errors',true);
             $this->modx->setLogTarget('HTML');
             $this->modx->setLogLevel(modX::LOG_LEVEL_ERROR);
@@ -85,6 +86,10 @@ class FormitFastPack {
             } else {
                 $this->modx->user = $user;
             }
+        } else {
+            ini_set('display_errors',false);
+            // error_reporting(E_ALL);
+            $this->modx->setLogTarget('FILE');
         }
     }
     
@@ -169,7 +174,7 @@ class FormitFastPack {
      * Processes a string as if it were the content of a chunk.
      * @param string $content The unprocessed content of the chunk
      * @param array $properties The properties for the Chunk
-     * @return
+     * @return string Processed output
      */
     public function processContent($content,$properties=array()) {
         $ph = array();
@@ -189,9 +194,10 @@ class FormitFastPack {
      * Will always use the file-based chunk if $debug is set to true.
      * @param string $name The name of the Chunk
      * @param string $delimiter The delimiter to split the chunk by. Use 'none' to use the entire chunk.
+     * @param string $default_delimiter The delimiter to use if the given delimiter does not exist in the chunk.
      * @return string The unprocessed content of the Chunk
      */
-    public function getChunkContent($name,$delimiter = 'none') {
+    public function getChunkContent($name,$delimiter = 'none',$default_delimiter= '<!-- default -->') {
         $chunk = null;
         if (!isset($this->chunks[$name][$delimiter])) {
             // first, try getting chunk from database
@@ -208,7 +214,14 @@ class FormitFastPack {
             // explode by delimiter unless delimiter is 'none'
             if (empty($delimiter)) return 'Type not found.';
             if ($delimiter != 'none') {
-                if (strpos($content,$delimiter) === false) return ''.$delimiter;
+                if (strpos($content,$delimiter) === false) {
+                    // if the default delimiter is not present, return the entire content
+                    if (strpos($content,$default_delimiter) === false) {
+                        return $content;
+                    }
+                    // else just use the default delimiter
+                    $delimiter = $default_delimiter;
+                }
                 $contentArray = explode($delimiter,' '.$content);
                 $content = $contentArray[1];
             }
