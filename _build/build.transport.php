@@ -99,8 +99,8 @@ if ($hasSetupOptions) {
 }
 
 /* override with your own defines here */
-require_once $sources['build'] . 'includes/functions.php';
-require_once $sources['build'] . 'build.config.php';
+require_once ($sources['build'] . 'includes/functions.php');
+require_once ($sources['build'] . 'build.config.php');
 require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
 
 /* start of work - get MODx */
@@ -118,6 +118,7 @@ $modx->getService('lexicon','modLexicon');
 $modx->lexicon->load('formitfastpack:properties');
 
 /* create new category w/ package name - required */
+/** @var $category modCategory */
 $category=$modx->newObject('modCategory');
 $category->set('id',1);
 $category->set('category',PKG_CATEGORY);
