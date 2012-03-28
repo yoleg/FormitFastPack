@@ -36,8 +36,8 @@ set_time_limit(0);
 /* Set package info be sure to set all of these */
 define('PKG_NAME','FormitFastPack');
 define('PKG_NAME_LOWER','formitfastpack');
-define('PKG_VERSION','0.1.5');
-define('PKG_RELEASE','beta');
+define('PKG_VERSION','1.0.0');
+define('PKG_RELEASE','alpha');
 define('PKG_CATEGORY','FormitFastPack');
 
 /* Set package options - you can turn these on one-by-one

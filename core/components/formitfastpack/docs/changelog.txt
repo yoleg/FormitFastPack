@@ -1,5 +1,12 @@
 Changelog for FormitFastPack.
 
+FormitFastPack 1.0.0 alpha
+======================================
+- Fixed value refresh bug (Revo 2.2?)
+- Speed optimization
+- Refactoring for OOP
+- Various options tweaked, not all options fully tested yet
+
 FormitFastPack 0.1.1 beta - 0.1.4 beta
 ======================================
 - added support for options and field_html generated from any element
