@@ -288,17 +288,18 @@ $current_value = $modx->getPlaceholder($prefix.$name);
 $use_get = $modx->getOption('use_get',$config,false);
 $use_request = $modx->getOption('use_request',$config,false);
 $use_cookies = $modx->getOption('use_cookies',$config,false);
-if (($current_value == '') && $use_get) {
-	$current_value = isset($_GET[$name]) ? $_REQUEST[$name] : '';
+if (empty($current_value) && $use_get) {
+	$current_value = isset($_GET[$name]) ? $_REQUEST[$name] : null;
 }
-if (($current_value == '') && $use_request) {
-	$current_value = isset($_REQUEST[$name]) ? $_REQUEST[$name] : '';
+if (empty($current_value) && $use_request) {
+	$current_value = isset($_REQUEST[$name]) ? $_REQUEST[$name] : null;
 }
 if ($use_cookies) {
 	$session_key = 'field.'.$placeholders['key'].$name;
-	$current_value = ($current_value == '') ? $modx->getOption($session_key,$_SESSION,'') : $current_value;
+	$current_value = empty($current_value) ? $modx->getOption($session_key,$_SESSION,null) : $current_value;
 	$_SESSION[$session_key] = $current_value;
 }
+$current_value = (string) $current_value;
 
 // Set the error and current value placeholders.
 $placeholders['error'] = $error;
