@@ -181,7 +181,7 @@ class FormitFastPack {
         foreach($properties as $key => $value) {
             $ph[$key] = (string) $value;
         }
-        if (false) $chunk = new modChunk($this->modx);
+        /** @var $chunk modChunk */
         $chunk = $this->modx->newObject('modChunk');
         $chunk->setContent($content);
         $chunk->setCacheable(false);
