@@ -74,6 +74,7 @@ class ffpField {
         foreach ($this->defaults as $key => $default) {
             $this->config[$key] = $this->modx->getOption($key, $settings, $default);
         }
+        $this->config = array_merge($settings, $this->config);
         $this->calculateConfig();
     }
 
