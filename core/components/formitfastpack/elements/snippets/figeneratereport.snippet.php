@@ -20,7 +20,7 @@ $default_excluded_fields = explode(',',$modx->getOption('figrDefaultExcludedFiel
 $excluded_fields = explode(',',$modx->getOption('figrExcludedFields',$scriptProperties,''));
 $excluded_fields = array_merge($default_excluded_fields,$excluded_fields);
 // Unless the default excluded fields have been overriden, also exclude the submitVar
-if ($modx->getOption('submitVar',$scriptProperties,false) && !$modx->getOption('figrDefaultExcludedFields',$scriptProperties,true)) {
+if ($modx->getOption('submitVar',$scriptProperties,'') && !$modx->getOption('figrDefaultExcludedFields',$scriptProperties,'')) {
     $excluded_fields[] = $modx->getOption('submitVar',$scriptProperties,'submit');
 }
 
