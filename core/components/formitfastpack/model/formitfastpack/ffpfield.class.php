@@ -177,8 +177,8 @@ class ffpField {
         }
         if (!$cached) {
             // prime all vars
-            $this->html = $this->initiateHtml();
             $this->placeholders = $this->initiatePlaceholders();
+            $this->html = $this->initiateHtml();
             // $this->html['outer'] = $this->ffp->processContent($this->html['outer'], $this->placeholders);
         }
         // Store to cache if needed.

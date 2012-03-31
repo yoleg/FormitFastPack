@@ -78,7 +78,7 @@
  */
 $debug = $modx->getOption('debug',$scriptProperties,false);
 /** @var $ffp FormitFastPack */
-$ffp_core_path = $modx->getOption('ffp.core_path', null, $modx->getOption('core_path') . 'components/formitfastpack/');
+$ffp_core_path = $modx->getOption('formitfastpack.core_path', null, $modx->getOption('core_path') . 'components/formitfastpack/');
 require_once $ffp_core_path.'model/formitfastpack/ffpfield.class.php';
 
 // load ffp service
@@ -88,6 +88,9 @@ if (!($ffp instanceof FormitFastPack)) return 'Package not found.';
 // load defaults
 $defaults = $ffp->getConfig();
 $config = array_merge($defaults,$scriptProperties);
+
+$disable_cache = false;
+if ($disable_cache) $config['cache'] = 0;
 
 // create ffpField
 $field = new ffpField($ffp);
