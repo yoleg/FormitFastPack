@@ -155,6 +155,31 @@ class FormitFastPack {
         return $output;
     }
 
+/*********************************************************************/
+/*********************************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*                            Chunks                                 */
+/*                                                                   */
+/*********************************************************************/
+/*********************************************************************/
+/*********************************************************************/
+    public function _getCacheChunk($name,$properties = array()) {
+        $cache_id = $name;
+        $output = $this->config['enable_chunk_cache'] ? $this->_cacheGet('chunk',$cache_id,$properties) : null;
+        if (is_null($output)) {
+            $content = $this->getChunkContent($name);
+            $chunk = $this->modx->newObject('modChunk');
+            $chunk->setContent($content);
+            $chunk->setCacheable(false);
+            $output = $chunk->process($properties,null);
+            if ($this->config['enable_chunk_cache']) {
+                $this->_cacheSet('chunk',$name,$properties,$output);
+            }
+        }
+        return $output;
+    }
+
     /**
      * Gets a Chunk and caches it; also falls back to file-based templates for easier debugging.
      *
@@ -198,6 +223,7 @@ class FormitFastPack {
      * @return string The unprocessed content of the Chunk
      */
     public function getChunkContent($name,$delimiter = 'none',$default_delimiter= '<!-- default -->') {
+        /** @var $chunk modChunk */
         $chunk = null;
         if (!isset($this->chunks[$name][$delimiter])) {
             // first, try getting chunk from database
@@ -250,5 +276,61 @@ class FormitFastPack {
             $o = file_get_contents($f);
         }
         return $o;
+    }
+/*********************************************************************/
+/*********************************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*                                Cache                              */
+/*                                                                   */
+/*********************************************************************/
+/*********************************************************************/
+/*********************************************************************/
+    // todo: use for getChunk w/ auto clearing after chunk edited
+    /**
+     * Get a unique cache key value
+     *
+     * @param mixed $id The unique ID of the resource.
+     * @param array $params An array of parameters to cache
+     * @param string $type What we are caching
+     * @return string The generated cache key.
+     */
+    protected function _getCacheKey($id,array $params = array(), $type = 'chunk') {
+        $output = $type.'s/';
+        $output .= $id.'/';
+        $key = md5($params);
+        $page = (string) $this->modx->resource->get('id');
+        $output .= "page-{$page}-params-{$key}";
+        return $output;
+    }
+    public function clearCache() {
+        $this->modx->cacheManager->delete($this->config['chunk_cache_path']);
+    }
+    public function getCacheOptions() {
+        $options = array();
+        return $options;
+    }
+    /** Update the time limit on the cache and optionally add info
+     * @param mixed $id The unique ID of the resource.
+     * @param array $params An array of parameters to cache
+     * @param string $value The value to cache
+     * @param int $time_limit Time limit in seconds
+     * @return string The cache value
+     */
+    protected function _cacheSet($id, $params, $value, $time_limit=null) {
+        $options = $this->getCacheOptions();
+        $time_limit = is_null($time_limit) ? 60*60*24 : $time_limit;
+        $this->modx->cacheManager->set($this->_getCacheKey($id,$params),$value, $time_limit,$options);
+        return true;
+    }
+    /** Retrieve info from the cache
+     * @param mixed $id The unique ID of the resource.
+     * @param array $params An array of parameters to cache
+     * @return string The value from the cache
+     */
+    protected function _cacheGet($id, array $params) {
+        $options = $this->getCacheOptions();
+        $cacheValue = $this->modx->cacheManager->get($this->_getCacheKey($id,$params),$options);
+        return $cacheValue;
     }
 }
