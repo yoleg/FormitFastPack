@@ -71,8 +71,8 @@ $properties = array(
         'lexicon' => 'formitfastpack:properties',
     ),
     array(
-        'name' => 'inner_override',
-        'desc' => 'ffp_field_inner_override_desc',
+        'name' => 'inner_html',
+        'desc' => 'ffp_field_inner_html_desc',
         'type' => 'textfield',
         'options' => '',
         'value' => '',
@@ -151,8 +151,8 @@ $properties = array(
         'lexicon' => 'formitfastpack:properties',
     ),
     array(
-        'name' => 'options_override',
-        'desc' => 'ffp_field_options_override_desc',
+        'name' => 'options_html',
+        'desc' => 'ffp_field_options_html_desc',
         'type' => 'textfield',
         'options' => '',
         'value' => '',
