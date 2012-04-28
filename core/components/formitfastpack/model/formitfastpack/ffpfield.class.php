@@ -25,7 +25,7 @@ class ffpField {
         $cache_default = $this->modx->getOption('ffp.field_default_cache', null, 'auto');
         $custom_ph_default = $this->modx->getOption('ffp.custom_ph', null, 'class,multiple,array,header,default,class,outer_class,label,note,note_class,size,title,req,message,clear_message');
         $defaults = array(
-            'debug' => false,
+            'debug' => 0,
             'cache' => $cache_default,
             'name' => '',
             'type' => '',
@@ -56,12 +56,12 @@ class ffpField {
             'inner_element' => '',
             'inner_element_class' => 'modChunk',
             'inner_element_properties' => '[]',
-            'use_get' => false,
-            'use_request' => false,
-            'use_cookies' => false,
+            'use_get' => 0,
+            'use_request' => 0,
+            'use_cookies' => 0,
             'error_class' => 'error',
-            'mark_selected' => true,
-            'to_placeholders' => false,
+            'mark_selected' => 1,
+            'to_placeholders' => 0,
         );
         $this->defaults = $defaults;
     }
