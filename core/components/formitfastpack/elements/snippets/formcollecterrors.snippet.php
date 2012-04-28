@@ -5,10 +5,12 @@
  * License: GPL v. 3
  */
 $output = '';
-
+/**
+ * @var MODx $modx
+ * @var array $scriptProperties
+ */
+/** @var $ffp FormitFastPack */
 $ffp = $modx->getService('formitfastpack','FormitFastPack',$modx->getOption('ffp.core_path',null,$modx->getOption('core_path').'components/formitfastpack/').'model/formitfastpack/',$scriptProperties);
-if (false) $ffp = new FormitFastPack($modx); // never used - debug only
-if (false) $modx = new modX(''); // never used - debug only
 if (!($ffp instanceof FormitFastPack)) return 'Package not found.';
 $defaults = $ffp->getConfig();
 $config = array_merge($defaults,$scriptProperties);

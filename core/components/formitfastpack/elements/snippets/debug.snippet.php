@@ -6,9 +6,10 @@
  */
 $output = '';
 
-// not used - for syntax checking only
-global $modx;
-if (false) $modx = new modX('');
+/**
+ * @var MODx $modx
+ * @var array $scriptProperties
+ */
 
 // Display Errors
 error_reporting(E_ALL); ini_set('display_errors',true);
