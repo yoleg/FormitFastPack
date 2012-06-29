@@ -25,13 +25,13 @@ class ffpField {
         $cache_default = $this->modx->getOption('ffp.field_default_cache', null, 'auto');
         $custom_ph_default = $this->modx->getOption('ffp.custom_ph', null, 'class,multiple,array,header,default,class,outer_class,label,note,note_class,size,title,req,message,clear_message');
         $defaults = array(
-            'debug' => 0,
+            'debug' => false,
             'cache' => $cache_default,
             'name' => '',
-            'type' => '',
+            'type' => 'text',
             'outer_type' => '',
             'prefix' => 'fi.',
-            'error_prefix' => 'fi.error.',
+            'error_prefix' => '', // add "error." to default prefix
             'key_prefix' => '',
             // delimiter each field type is bordered by.
             // example: <!-- textarea --> <input type="textarea" name="[[+name]]">[[+current_value]]</input> <!-- textarea -->

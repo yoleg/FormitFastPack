@@ -21,8 +21,7 @@
 /**
  * @package FormitFastPack
  */
-/*
- * Info may be slightly out of date.
+/* Info may be slightly out of date.
  *
  * General Parameters:
  *
@@ -78,9 +77,15 @@
  * key - A unique but human-friendly identifier for each field or sub-field (useful for HTML id attributes). Generated from the key_prefix, prefix, field name, and (only if using an option field) value.
  *
  */
+/**
+ * @var MODx $modx
+ * @var array $scriptProperties
+ */
+
 $debug = $modx->getOption('debug',$scriptProperties,false);
 /** @var $ffp FormitFastPack */
 $ffp_core_path = $modx->getOption('formitfastpack.core_path', null, $modx->getOption('core_path') . 'components/formitfastpack/');
+/** @define "$ffp_core_path" "../../" */
 require_once $ffp_core_path.'model/formitfastpack/ffpfield.class.php';
 
 // load ffp service
