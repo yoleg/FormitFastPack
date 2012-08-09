@@ -1,9 +1,9 @@
 <!-- default -->
-  <input type="[[+type]]" name="[[+name]]" id="[[+name]]" value="[[+current_value:default=`[[+default]]`]]" class="[[+type]] [[+class]][[+error_class]]" size="[[+size:default=`40`]]" />
+  <input type="[[+type]]" name="[[+name]]" id="[[+key]]" value="[[+current_value:default=`[[+default]]`]]" class="[[+type]] [[+class]][[+error_class]]" size="[[+size:default=`40`]]" />
 <!-- default -->
 
 <!-- file -->
-  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" class="[[+type]] [[+class]][[+error_class]]" />
+  <input type="[[+type]]" name="[[+name]][[+array:notempty=`[]`]]" id="[[+key]]" class="[[+type]] [[+class]][[+error_class]]" />
 <!-- file -->
 
 <!-- hidden -->
@@ -11,7 +11,7 @@
 <!-- hidden -->
 
 <!-- textarea -->
-  <textarea id="[[+name]]" class="[[+type]] [[+class]][[+error_class]]" name="[[+name]]">[[+current_value:default=`[[+default]]`]]</textarea>
+  <textarea id="[[+key]]" class="[[+type]] [[+class]][[+error_class]]" name="[[+name]]">[[+current_value:default=`[[+default]]`]]</textarea>
 <!-- textarea -->
 
 <!-- checkbox -->
@@ -31,7 +31,7 @@
 <!-- select -->
 <span class="[[+class]][[+error_class]]">
 <input type="hidden" name="[[+name]][[+array:notempty=`[]`]]" value="" />
-<select name="[[+name]][[+array:notempty=`[]`]]" id="[[+name]]" class="[[+class]]"[[+multiple:notempty=` multiple="multiple"`]][[+title:notempty=` title="[[+title]]"`]]>
+<select name="[[+name]][[+array:notempty=`[]`]]" id="[[+key]]" class="[[+class]]"[[+multiple:notempty=` multiple="multiple"`]][[+title:notempty=` title="[[+title]]"`]]>
   [[+header:notempty=`<option value="[[+default]]">[[+header]]</option>`]]
   [[+options_html]]
 </select>
@@ -43,7 +43,7 @@
 <!-- static -->
 
 <!-- submit -->
-<input id="[[+name]]" class="button [[+type]] [[+class]]" name="[[+name]]" type="[[+type]]" value="[[+message:default=`Submit`]]" />
+<input id="[[+key]]" class="button [[+type]] [[+class]]" name="[[+name]]" type="[[+type]]" value="[[+message:default=`Submit`]]" />
 <input id="[[+name]]-clear" class="button [[+type]] [[+class]]" type="reset" value="[[+clear_message:default=`Clear Form`]]" />
 <!-- submit -->
 

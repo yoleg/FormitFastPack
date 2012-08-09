@@ -27,6 +27,7 @@ class ffpField {
         $defaults = array(
             'debug' => false,
             'cache' => $cache_default,
+            'default_value' => '',
             'name' => '',
             'type' => 'text',
             'outer_type' => '',
@@ -123,7 +124,7 @@ class ffpField {
         $this->config['error_prefix'] = $this->config['error_prefix'] ? $this->config['error_prefix'] : $this->config['prefix'] . 'error.';
 
         // generate unique key
-        $this->config['key'] = preg_replace("/[^a-zA-Z0-9_-]/", "", $this->config['key_prefix'] . $this->config['name']);
+        $this->config['key'] = preg_replace("/[^a-zA-Z0-9_-]/", "", ($this->config['key_prefix'] . $this->config['name']));
     }
 
     public function calculateCacheConfig() {
@@ -310,7 +311,7 @@ class ffpField {
             $inner_array = $placeholders;
             $inner_array['label'] = $option_array[0];
             $inner_array['value'] = isset($option_array[1]) ? $option_array[1] : $option_array[0];
-            $inner_array['key'] = $this->config['key'] . '-' . preg_replace("/[^a-zA-Z0-9-\s]/", "", $inner_array['value']);
+            $inner_array['key'] = $this->config['key'] . '-' . preg_replace("/[^a-zA-Z0-9-_]/", "", $inner_array['value']);
             $output .= $this->ffp->getChunk($this->config['tpl'], $inner_array, $inner_delimiter);
         }
         return $output;
@@ -323,18 +324,21 @@ class ffpField {
 
     public function getCurrentValue() {
         $current_value = $this->modx->getPlaceholder($this->config['prefix'] . $this->config['name']);
-        if (empty($current_value) && $this->config['use_get']) {
+        if (is_null($current_value) && $this->config['use_get']) {
             $current_value = isset($_GET[$this->config['name']]) ? $_REQUEST[$this->config['name']] : null;
         }
-        if (empty($current_value) && $this->config['use_request']) {
+        if (is_null($current_value) && $this->config['use_request']) {
             $current_value = isset($_REQUEST[$this->config['name']]) ? $_REQUEST[$this->config['name']] : null;
         }
+        $session_key = 'field.' . $this->config['key'] . $this->config['name'];
+        if (is_null($current_value) && $this->config['use_cookies']) {
+            $current_value = is_null($current_value) ? $this->modx->getOption($session_key, $_SESSION, null) : $current_value;
+        }
+        $current_value = is_null($current_value) ? $this->config['default_value'] : $current_value;
+        $current_value = (string) $current_value;
         if ($this->config['use_cookies']) {
-            $session_key = 'field.' . $this->config['key'] . $this->config['name'];
-            $current_value = empty($current_value) ? $this->modx->getOption($session_key, $_SESSION, null) : $current_value;
             $_SESSION[$session_key] = $current_value;
         }
-        $current_value = (string)$current_value;
         return $current_value; // ToDo: add better caching and take this out to a str_replace function.
     }
 

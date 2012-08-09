@@ -27,6 +27,7 @@
  *
  * debug - turn on debugging (default: false)
  * name - the name of the field (default: '')
+ * default_value - the default value of the field (default: '')
  * type - the field type. Used to decide which subset of the tpl chunk to use. (default: 'text')
  * outer_type - Override the type for the outer template. (default: '')
  * prefix - the prefix used by the FormIt call this field is for - may also work with EditProfile, Register, etc... snippet calls. (default: 'fi.')
