@@ -102,6 +102,9 @@ class FormitFastPack {
      * @return bool Success.
      */
     public function setConfig(array $defaults = array()) {
+        if($this->modx->getOption('resetDefaults',$defaults,false)) {
+            $this->defaults = array();
+        }
         $this->defaults = array_merge($this->defaults,$defaults);
         return true;
     }
