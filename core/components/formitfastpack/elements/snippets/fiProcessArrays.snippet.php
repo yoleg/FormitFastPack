@@ -1,4 +1,5 @@
-<?php /* 
+<?php
+/*
  * fiProcessArrays formit hook. Processes all values stored as arrays and implodes them.
  * 
  * options: 
@@ -8,9 +9,14 @@
  * 
  * Copyright Oleg Pryadko (websitezen.com) 2011
  * License GPL v.3 or later 
-*/ 
+*/
+/**
+ * @var MODx $modx
+ * @var array $scriptProperties
+ */
 $field_suffix = $modx->getOption('fipaFieldSuffix',$scriptProperties,'_values');
 $separator = $modx->getOption('fipaValueSeparator',$scriptProperties,', ');
+$list = $modx->getOption('fipaList',$scriptProperties,false);
 $excluded_fields = explode(',',$modx->getOption('fipaExcludedFields',$scriptProperties,''));
 $allFormFields = $hook->getValues();
 foreach ($allFormFields as $fieldName => $fieldValue) {
@@ -19,11 +25,14 @@ foreach ($allFormFields as $fieldName => $fieldValue) {
     $count=0;
     foreach ($fieldValue as $value) {
       if (!empty($value)) {
-        if ($count) {$imploded .= $separator;}
+        if ($list) {$imploded .= '<li>';}
+        else if ($count) {$imploded .= $separator;}
         $imploded .= $value;
+        if ($list) {$imploded .= '</li>';}
         $count++;
       }
     }
+    if ($list) {$imploded = '<ul>'.$imploded.'</ul>';}
     $hook->setValue($fieldName.$field_suffix,$imploded);
   }
 }
