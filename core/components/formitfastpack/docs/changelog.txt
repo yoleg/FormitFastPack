@@ -1,5 +1,11 @@
 Changelog for FormitFastPack.
 
+FormitFastPack 1.1.0 pl
+======================================
+- Various bug fixes
+- Added several field parameters, including &default_value
+- Updated example property set in the fieldPropSetExample snippet.
+
 FormitFastPack 1.0.0 alpha
 ======================================
 - Fixed value refresh bug (Revo 2.2?)
