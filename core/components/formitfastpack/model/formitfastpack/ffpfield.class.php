@@ -14,19 +14,20 @@ class ffpField {
     public $config = array();
     /** @var array A collection of defaults */
     public $defaults = array();
+    /** @var array Working copies of the various areas of output. */
     public $html = array();
+    /** @var array The array of placeholders to set for chunk processing. */
     public $placeholders = array();
+    /** @var bool Automatically detected. If true, the inner html is parsed first and set as an inner_html placeholder for the outer_html. Otherwise, this extra step is skipped with a str_replace for the [[+inner_html]] placeholder. */
     public $double_processing_needed = false;
 
     function __construct(FormitFastPack &$ffp, array $config = array()) {
         $this->ffp =& $ffp;
         $this->modx =& $ffp->modx;
         $this->config = $config;
-        $cache_default = $this->modx->getOption('ffp.field_default_cache', null, 'auto');
-        $custom_ph_default = $this->modx->getOption('ffp.custom_ph', null, 'class,multiple,array,header,default,class,outer_class,label,note,note_class,size,title,req,message,clear_message');
         $defaults = array(
             'debug' => false,
-            'cache' => $cache_default,
+            'cache' => 'auto',
             'default_value' => '',
             'name' => '',
             'type' => 'text',
@@ -42,11 +43,11 @@ class ffpField {
             // The main template (contains all field types separated by the delimiter)
             'tpl' => 'fieldTypesTpl',
             'options' => '',
-            'options_delimiter' => '||',
-            'options_inner_delimiter' => '==',
+            'options_delimiter_outer' => '||',
+            'options_delimiter_inner' => '==',
             'option_type' => '',
             'selected_text' => '',
-            'custom_ph' => $custom_ph_default,
+            'custom_ph' => 'class,multiple,array,header,default,class,outer_class,label,note,note_class,size,title,req,message,clear_message',
             'set_type_ph' => 'text,textarea,checkbox,radio,select',
             // inner and options should be identical
             'options_html' => '',
@@ -57,12 +58,16 @@ class ffpField {
             'inner_element' => '',
             'inner_element_class' => 'modChunk',
             'inner_element_properties' => '[]',
+            'use_formit' => 1,
             'use_get' => 0,
             'use_request' => 0,
+            'use_session' => 0,
             'use_cookies' => 0,
             'error_class' => 'error',
             'mark_selected' => 1,
             'to_placeholders' => 0,
+            'use_session_prefix' => 'field.',
+            'use_cookies_prefix' => 'field.',
         );
         $this->defaults = $defaults;
     }
@@ -80,8 +85,6 @@ class ffpField {
     }
 
     public function calculateConfig() {
-        $options = array();
-
         // delimiters
         $this->config['delimiter'] = str_replace('[[+type]]', $this->config['type'], $this->config['delimiter_template']);
         $this->config['default_delimiter'] = str_replace('[[+type]]', $this->config['default_delimiter'], $this->config['delimiter_template']);
@@ -124,7 +127,7 @@ class ffpField {
         $this->config['error_prefix'] = $this->config['error_prefix'] ? $this->config['error_prefix'] : $this->config['prefix'] . 'error.';
 
         // generate unique key
-        $this->config['key'] = preg_replace("/[^a-zA-Z0-9_-]/", "", ($this->config['key_prefix'] . $this->config['name']));
+        $this->config['key'] = preg_replace('/[^a-zA-Z0-9_-]/', '', ($this->config['key_prefix'] . $this->config['name']));
     }
 
     public function calculateCacheConfig() {
@@ -137,7 +140,7 @@ class ffpField {
             $cache_resource_expires_default = $this->modx->getOption(xPDO::OPT_CACHE_EXPIRES, null, 0);
             $this->config['cacheExpires'] = (integer)$this->modx->getOption('cache_resource_expires', null, $cache_resource_expires_default);
         }
-        if (empty($this->config['cacheElementKey'])) $this->config['cacheElementKey'] = $this->modx->resource->getCacheKey() . '/' . md5($this->modx->toJSON($this->config) . implode('', $this->modx->request->getParameters()));
+        if (empty($this->config['cacheElementKey'])) $this->config['cacheElementKey'] = $this->modx->resource->getCacheKey() . '/field/' . md5($this->modx->toJSON($this->config) . $this->modx->toJSON($this->modx->request->getParameters()));
         $this->config['cacheOptions'] = array(
             xPDO::OPT_CACHE_KEY => $this->config['cacheKey'],
             xPDO::OPT_CACHE_HANDLER => $this->config['cacheHandler'],
@@ -168,6 +171,12 @@ class ffpField {
         }
         return $cached;
     }
+
+    /**
+     * The main controller function.
+     *
+     * @return string The parsed output.
+     */
     public function process() {
         $attributes_to_cache = array('html','placeholders','double_processing_needed');
         $cached = false;
@@ -178,52 +187,53 @@ class ffpField {
         }
         if (!$cached) {
             // prime all vars
-            $this->placeholders = $this->initiatePlaceholders();
-            $this->html = $this->initiateHtml();
-            // $this->html['outer'] = $this->ffp->processContent($this->html['outer'], $this->placeholders);
+            $this->placeholders = $this->initializePlaceholders();
+            $this->html = $this->initializeHtml();
         }
         // Store to cache if needed.
         if ($this->config['cache'] && !$cached) {
             $this->toCache($attributes_to_cache);
         }
-
         // get the current value of the field & FormIt validation error
         $current_value = $this->getCurrentValue();
         $error = $this->getError();
-
-        // Add selected markers to options - much faster than FormItIsSelected and FormItIsChecked for large forms
-        if ($this->html['options'] && $this->config['selected_text'] && $this->config['mark_selected']) {
-            $this->html['options'] = $this->ffp->markSelected($this->html['options'], $current_value, $this->config['selected_text']);
-        }
-
+        // mark options using a str_replace based on the current value(s)
+        $this->markOptions($current_value);
         // set final placeholders
-        $this->placeholders['current_value'] = $current_value;
+        $this->placeholders['current_value'] = (string) is_array($current_value) ? join(',',$current_value) : $current_value;
         $this->placeholders['error'] = $error;
         $this->placeholders['error_class'] = $error ? (' ' . $this->config['error_class']) : '';
         $this->placeholders['options_html'] = $this->html['options'];
-
         // Process outer_tpl first ONLY if inner_html ph has output filters.
         // Warning: this may cause unexpected results due to double processing.
         if ($this->double_processing_needed) {
             $this->placeholders['inner_html'] = $this->ffp->processContent($this->html['inner'], $this->placeholders);
         }
-
         // Optionally set all placeholders globally
         if ($this->config['to_placeholders']) {
             $this->modx->toPlaceholders($this->placeholders, $this->config['key_prefix']);
         }
-
         // Process the placeholders. With caching, this should be the only time a chunk is processed.
         $output = $this->ffp->processContent($this->html['outer'], $this->placeholders);
+        if ($this->config['debug']) {
+            $output = $output.'<pre>'.print_r($this->placeholders,1).'</pre>';
+        }
         return $output;
     }
 
-    public function initiatePlaceholders() {
-        $placeholders = $this->config;
-        // set defaults as placeholders as well
-        $get_defaults = explode(',', 'name,type,outer_type,prefix,error_prefix,key_prefix,tpl,option_tpl,outer_tpl,key');
-        foreach ($get_defaults as $var) {
-            $placeholders[$var] = (string)$this->config[$var];
+    public function markOptions($current_value) { // Add selected markers to options - much faster than FormItIsSelected and FormItIsChecked for large forms
+        if ($this->html['options'] && $this->config['selected_text'] && $this->config['mark_selected']) {
+            $selected_values = is_array($current_value) ? $current_value : array($current_value);
+            foreach ($selected_values as $selected_value) {
+                $this->html['options'] = $this->markSelected($this->html['options'], $selected_value, $this->config['selected_text']);
+            }
+        }
+    }
+
+    public function initializePlaceholders() {
+        $placeholders = array();
+        foreach($this->config as $k => $v) {
+            $placeholders[$k] = (string) $v;
         }
         // load custom placeholders - not essential, but helps a lot with speed.
         $custom_ph = explode(',', $this->config['custom_ph']);
@@ -244,7 +254,7 @@ class ffpField {
         }
         return $placeholders;
     }
-    public function initiateHtml() {
+    public function initializeHtml() {
         $html = array();
         $html['options'] = $this->config['options_html'];
         $html['inner'] = $this->config['inner_html'];
@@ -302,16 +312,16 @@ class ffpField {
     public function processOptions($options, $placeholders) {
         $inner_delimiter = '<!-- ' . $this->config['option_tpl'] . ' -->';
         $output = '';
-        $options = explode($this->config['options_delimiter'], $options);
+        $options = explode($this->config['options_delimiter_outer'], $options);
         foreach ($options as $option) {
-            $option_array = explode($this->config['options_inner_delimiter'], $option);
+            $option_array = explode($this->config['options_delimiter_inner'], $option);
             foreach ($option_array as $key => $value) {
                 $option_array[$key] = trim($value);
             }
             $inner_array = $placeholders;
             $inner_array['label'] = $option_array[0];
             $inner_array['value'] = isset($option_array[1]) ? $option_array[1] : $option_array[0];
-            $inner_array['key'] = $this->config['key'] . '-' . preg_replace("/[^a-zA-Z0-9-_]/", "", $inner_array['value']);
+            $inner_array['key'] = $this->config['key'] . '-' . preg_replace('/[^a-zA-Z0-9-_]/', '', $inner_array['value']);
             $output .= $this->ffp->getChunk($this->config['tpl'], $inner_array, $inner_delimiter);
         }
         return $output;
@@ -322,24 +332,87 @@ class ffpField {
         return $error;
     }
 
+    /**
+     * Retreives the current value of the field.
+     *
+     * Depending on config, checks MODX Placeholders set by FormIt and several global variables.
+     *
+     * @return array|string An array of values or the string value.
+     */
     public function getCurrentValue() {
-        $current_value = $this->modx->getPlaceholder($this->config['prefix'] . $this->config['name']);
+        $current_value = null;
+        // try to get the value from formitFastPack using modx placeholders
+        // todo: if array, possibly take the FIRST or selected value and mark it as "set" so other field snippets won't use it
+        if ($this->config['use_formit']) {
+            $placeholder_name = $this->config['prefix'] . $this->config['name'];
+            $array_values = $this->getCurrentArrayValues();
+            $current_value = $array_values ? $array_values : $this->modx->getPlaceholder($placeholder_name);
+        }
+        // if no value is found, try alternative sources until a value is found
         if (is_null($current_value) && $this->config['use_get']) {
             $current_value = isset($_GET[$this->config['name']]) ? $_REQUEST[$this->config['name']] : null;
         }
         if (is_null($current_value) && $this->config['use_request']) {
             $current_value = isset($_REQUEST[$this->config['name']]) ? $_REQUEST[$this->config['name']] : null;
         }
-        $session_key = 'field.' . $this->config['key'] . $this->config['name'];
-        if (is_null($current_value) && $this->config['use_cookies']) {
-            $current_value = is_null($current_value) ? $this->modx->getOption($session_key, $_SESSION, null) : $current_value;
+        $session_key = $this->config['use_session_prefix'] . $this->config['prefix'] . $this->config['name'];
+        if (is_null($current_value) && $this->config['use_session']) {
+            $current_value = $this->modx->getOption($session_key, $_SESSION, null);
         }
+        $cookies_key = $this->config['use_cookies_prefix'] . $this->config['prefix'] . $this->config['name'];
+        if (is_null($current_value) && $this->config['use_cookies']) {
+            $current_value = $this->modx->getOption($cookies_key, $_COOKIE, null);
+        }
+        // use default value if not already set
         $current_value = is_null($current_value) ? $this->config['default_value'] : $current_value;
-        $current_value = (string) $current_value;
-        if ($this->config['use_cookies']) {
+        // if configured, save current value in session/ cookies for later use
+        if ($this->config['use_session']) {
             $_SESSION[$session_key] = $current_value;
         }
-        return $current_value; // ToDo: add better caching and take this out to a str_replace function.
+        if ($this->config['use_cookies']) {
+            $_COOKIE[$cookies_key] = $current_value;
+        }
+        return $current_value;
+    }
+
+    /**
+     * Looks for the array-indicating placeholders in the MODX placeholder list and returns an array of values.
+     *
+     * @return array List of values.
+     */
+    public function getCurrentArrayValues() {
+        $output = array();
+        $placeholder_start = $this->config['prefix'] .$this->config['name'] . '.';
+        if (!isset($this->modx->placeholders[$placeholder_start.'0'])) {
+            return $output;
+        }
+        foreach($this->modx->placeholders as $k => $v) {
+            if (strpos($k,$placeholder_start) === 0) {
+                $ph_key_end = substr($k, strlen($placeholder_start));
+                // check if the placeholder key matches the pattern "prefix.name.#" where # is an integer
+                if (strlen($ph_key_end) > 0 && is_numeric($ph_key_end) && intval($ph_key_end) >= 0) {
+                    $output[] = $v;
+                }
+            }
+        }
+        return $output;
+    }
+
+    /**
+     * Adds a marker (such as selected="selected") after a search string such as value="1" if it is found
+     *
+     * @access public
+     * @param string $input_text The text to process. Should have values in the form of value="$current_value".
+     * @param string $current_value The value to add the marker afterwards.
+     * @param string $selected_marker The marker to add after the value attribute.
+     * @return string The processed output.
+     */
+    public function markSelected($input_text,$current_value = '',$selected_marker = 'selected="selected"') {
+        // Run search and replace to add selected or checked attributes
+        $options_selected_search = 'value="'.$current_value.'"';
+        $options_selected_replace = $options_selected_search .' '.$selected_marker;
+        $output = str_replace($options_selected_search, $options_selected_replace,$input_text);
+        return $output;
     }
 
 }
