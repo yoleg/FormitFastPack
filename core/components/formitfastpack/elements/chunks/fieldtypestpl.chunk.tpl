@@ -16,7 +16,7 @@
 
 <!-- checkbox -->
 <span class="boolWrap[[+error_class]]">
-<input name="[[+name]][[+array:notempty=`[]`]]" type="hidden" value="" />
+<input name="[[+name]][[+array:notempty=`[]`]]" type="hidden" value="[[+current_value:default=`[[+default]]`]]" />
 [[+options_html]]
 </span>
 <!-- checkbox -->
