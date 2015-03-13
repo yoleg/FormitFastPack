@@ -365,6 +365,11 @@ class ffpField {
         }
         // use default value if not already set
         $current_value = is_null($current_value) ? $this->config['default_value'] : $current_value;
+	// support multiple default values on array fields (checkboxes) using same delimiter (format would be
+	// &default_value=`option1||option2`. don't include labels in default specification.
+	if($this->config['array'] && !is_array($current_value)) {
+            $current_value = explode($this->config['options_delimiter_outer'], $current_value);
+        }
         // if configured, save current value in session/ cookies for later use
         if ($this->config['use_session']) {
             $_SESSION[$session_key] = $current_value;
